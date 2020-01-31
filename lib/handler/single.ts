@@ -76,7 +76,7 @@ export const doOnSingleProcess = async (flows: FlowFile[], env: Environment): Pr
 				}
 			}, Promise.resolve());
 		};
-		const countLeft = pendingFlows.length;
+		let countLeft = pendingFlows.length;
 		while (pendingFlows.length !== 0) {
 			const flows = [...pendingFlows];
 			pendingFlows.length = 0;
@@ -85,6 +85,8 @@ export const doOnSingleProcess = async (flows: FlowFile[], env: Environment): Pr
 				// nothing can be run
 				jammed = true;
 				break;
+			} else {
+				countLeft = pendingFlows.length;
 			}
 		}
 	} finally {

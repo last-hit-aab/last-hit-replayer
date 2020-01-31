@@ -157,6 +157,9 @@ exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, voi
                     jammed = true;
                     return [3 /*break*/, 5];
                 }
+                else {
+                    countLeft = pendingFlows_1.length;
+                }
                 return [3 /*break*/, 3];
             case 5: return [3 /*break*/, 7];
             case 6:
