@@ -108,7 +108,7 @@ var RequestCounter = /** @class */ (function () {
     RequestCounter.prototype.poll = function (resolve, reject, canResolve) {
         if (canResolve === void 0) { canResolve = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var usedTime, msg;
+            var usedTime, offsetUrls_1, unmatchedUrls, msg;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -136,9 +136,20 @@ var RequestCounter = /** @class */ (function () {
                                 this.poll(resolve, reject, true);
                             }
                         }
-                        else if (this.used > this.timeout) {
+                        else if (this.used >= this.timeout) {
                             usedTime = this.used;
-                            msg = "Wait for all requests done, " + this.requests.length + " sent and " + this.offsets.length + " received, timeout after " + usedTime + "ms.";
+                            offsetUrls_1 = this.offsets.map(function (offset) { return offset.url; });
+                            unmatchedUrls = this.requests
+                                .filter(function (request) {
+                                var requestUrl = request.url;
+                                var offsetIndex = offsetUrls_1.findIndex(function (url) { return url === requestUrl; });
+                                if (offsetIndex !== -1) {
+                                    offsetUrls_1.splice(offsetIndex, 1);
+                                }
+                            })
+                                .map(function (request) { return request.url; })
+                                .join(', ');
+                            msg = "Wait for all requests done, " + this.requests.length + " sent and " + this.offsets.length + " received, timeout after " + usedTime + "ms. Mismatched urls[" + unmatchedUrls + "]";
                             this.clear();
                             reject(new Error(msg));
                         }

@@ -109,9 +109,20 @@ class RequestCounter {
 			} else {
 				this.poll(resolve, reject, true);
 			}
-		} else if (this.used > this.timeout) {
+		} else if (this.used >= this.timeout) {
 			const usedTime = this.used;
-			const msg = `Wait for all requests done, ${this.requests.length} sent and ${this.offsets.length} received, timeout after ${usedTime}ms.`;
+			const offsetUrls = this.offsets.map(offset => offset.url);
+			const unmatchedUrls = this.requests
+				.filter(request => {
+					const requestUrl = request.url;
+					const offsetIndex = offsetUrls.findIndex(url => url === requestUrl);
+					if (offsetIndex !== -1) {
+						offsetUrls.splice(offsetIndex, 1);
+					}
+				})
+				.map(request => request.url)
+				.join(', ');
+			const msg = `Wait for all requests done, ${this.requests.length} sent and ${this.offsets.length} received, timeout after ${usedTime}ms. Mismatched urls[${unmatchedUrls}]`;
 			this.clear();
 			reject(new Error(msg));
 		} else {
