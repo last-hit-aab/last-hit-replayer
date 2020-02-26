@@ -144,7 +144,12 @@ var RequestCounter = /** @class */ (function () {
                                 var requestUrl = request.url;
                                 var offsetIndex = offsetUrls_1.findIndex(function (url) { return url === requestUrl; });
                                 if (offsetIndex !== -1) {
+                                    // matched
                                     offsetUrls_1.splice(offsetIndex, 1);
+                                    return false;
+                                }
+                                else {
+                                    return true;
                                 }
                             })
                                 .map(function (request) { return request.url; })

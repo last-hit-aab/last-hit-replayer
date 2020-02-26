@@ -117,7 +117,11 @@ class RequestCounter {
 					const requestUrl = request.url;
 					const offsetIndex = offsetUrls.findIndex(url => url === requestUrl);
 					if (offsetIndex !== -1) {
+						// matched
 						offsetUrls.splice(offsetIndex, 1);
+						return false;
+					} else {
+						return true;
 					}
 				})
 				.map(request => request.url)
