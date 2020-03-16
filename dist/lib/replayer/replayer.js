@@ -1432,11 +1432,11 @@ var Replayer = /** @class */ (function () {
                     case 0:
                         dataPath = step.datapath;
                         if (!dataPath) return [3 /*break*/, 3];
-                        return [4 /*yield*/, page.evaluate(function (dataPath) { return document.querySelectorAll(dataPath).length; }, dataPath)];
+                        return [4 /*yield*/, page.evaluate(function (dataPath) { return document.querySelectorAll("[" + dataPath + "]").length; }, dataPath)];
                     case 1:
                         count = _a.sent();
                         if (!(count === 1)) return [3 /*break*/, 3];
-                        return [4 /*yield*/, page.$(dataPath)];
+                        return [4 /*yield*/, page.$("[" + dataPath + "]")];
                     case 2:
                         element = _a.sent();
                         if (element) {
