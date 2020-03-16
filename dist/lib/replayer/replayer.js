@@ -1331,22 +1331,25 @@ var Replayer = /** @class */ (function () {
     };
     Replayer.prototype.executePageSwitchedStep = function (step) {
         return __awaiter(this, void 0, void 0, function () {
-            var page, url, newUrl, sleep, url_1, sleep, page_2, newPage, _a;
+            var page, url_1, newUrl, match, sleep, url_2, sleep, page_2, newPage, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         this.getLogger().debug("Execute page switched, step url is " + step.url + ".");
                         page = this.getPage(step.uuid);
                         if (!page) return [3 /*break*/, 4];
-                        url = utils_1.shorternUrl(page.url());
+                        url_1 = utils_1.shorternUrl(page.url());
                         newUrl = utils_1.shorternUrl(step.url);
-                        if (!(newUrl !== url)) return [3 /*break*/, 3];
+                        match = function () {
+                            return step.matcher ? new RegExp(step.matcher).test(url_1) : false;
+                        };
+                        if (!(newUrl !== url_1 && match())) return [3 /*break*/, 3];
                         sleep = util_1.default.promisify(setTimeout);
                         return [4 /*yield*/, sleep(1000)];
                     case 1:
                         _b.sent();
-                        url_1 = utils_1.shorternUrl(page.url());
-                        if (!(newUrl !== url_1)) return [3 /*break*/, 3];
+                        url_2 = utils_1.shorternUrl(page.url());
+                        if (!(newUrl !== url_2 && match())) return [3 /*break*/, 3];
                         return [4 /*yield*/, Promise.all([
                                 page.waitForNavigation(),
                                 page.goto(step.url, { waitUntil: 'domcontentloaded' })

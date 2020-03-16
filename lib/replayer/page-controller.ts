@@ -26,7 +26,7 @@ const installListenersOnPage = async (page: Page) => {
 
 					const image = new Image();
 					image.crossOrigin = 'anonymous';
-					image.onload = function() {
+					image.onload = function () {
 						const { width, height } = image;
 						canvas.width = width;
 						canvas.height = height;
@@ -67,11 +67,11 @@ const installListenersOnPage = async (page: Page) => {
 										// 是PNG, 转成JPEG
 										transformPNG2JPEG(base64Image).then(base64Image => {
 											imageData = base64Image;
-											func({ localIds: [0], errMsg: 'chooseImage:ok' });
+											func({ localIds: [ 0 ], errMsg: 'chooseImage:ok' });
 										});
 									} else {
 										imageData = base64Image as string;
-										func({ localIds: [0], errMsg: 'chooseImage:ok' });
+										func({ localIds: [ 0 ], errMsg: 'chooseImage:ok' });
 									}
 								};
 								reader.readAsDataURL(file);
@@ -203,11 +203,25 @@ export const controlPage = async (replayer: Replayer, page: Page, device: Device
 		const pageCreateStep = steps
 			.filter((step, index) => index >= currentIndex)
 			.find(step => {
-				return (
-					step.type === 'page-created' &&
-					((step as PageCreatedStep).forStepUuid === currentStep.stepUuid ||
-						newUrl === shorternUrl((step as PageCreatedStep).url!))
-				);
+				if (step.type !== 'page-created') {
+					return false;
+				}
+
+				const createStep = step as PageCreatedStep;
+				if (createStep.forStepUuid === currentStep.stepUuid) {
+					return true;
+				} else if (newUrl === shorternUrl(createStep.url!)) {
+					return true;
+				} else if (createStep.matcher && new RegExp(createStep.matcher).test(newUrl)) {
+					return true;
+				}
+
+				return false;
+				// return (
+				// 	step.type === 'page-created' &&
+				// 	((step as PageCreatedStep).forStepUuid === currentStep.stepUuid ||
+				// 		newUrl === shorternUrl((step as PageCreatedStep).url!))
+				// );
 			});
 		if (pageCreateStep == null) {
 			replayer
@@ -232,7 +246,7 @@ export const controlPage = async (replayer: Replayer, page: Page, device: Device
 		if (dialogType === 'alert') {
 			// accept is the only way to alert dialog
 			await dialog.accept('success');
-		} else if (['confirm', 'prompt'].includes(dialogType)) {
+		} else if ([ 'confirm', 'prompt' ].includes(dialogType)) {
 			const currentIndex = replayer.getCurrentIndex();
 			const steps = replayer.getSteps();
 			const uuid = replayer.findUuid(page);

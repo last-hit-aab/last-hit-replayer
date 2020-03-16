@@ -149,8 +149,8 @@ const simplifyFlow = (
 		params: !input
 			? params
 			: (Object.keys(input).map(key => {
-					return { name: key, type: 'in', value: input[key] } as FlowParameter;
-			  }) as FlowParameters)
+				return { name: key, type: 'in', value: input[key] } as FlowParameter;
+			}) as FlowParameters)
 	};
 };
 
@@ -207,6 +207,7 @@ class Replayer {
 			.on(ExtensionEventTypes.BROWSER_OPERATION, this.handlerBrowserOperation)
 			.on(ExtensionEventTypes.TEST_LOG, this.handleTestLog);
 	}
+
 	private handleExtensionLog = (event: ExtensionLogEvent): void => {
 		this.getLogger().log(event);
 	};
@@ -237,15 +238,19 @@ class Replayer {
 		// console.log(event);
 		this.testLogs.push(event.data);
 	};
+
 	private getFlowInput(): WorkspaceExtensions.FlowParameterValues {
 		return this.flowInput;
 	}
+
 	private getFlowOutput(): WorkspaceExtensions.FlowParameterValues {
 		return this.flowOutput;
 	}
+
 	private getTestLogs() {
 		return this.testLogs;
 	}
+
 	private async findCurrentPage(uuid?: string): Promise<Page> {
 		if (uuid) {
 			const page = this.getPage(uuid);
@@ -263,6 +268,7 @@ class Replayer {
 			}
 		}
 	}
+
 	private async tryToGetElementAttrValue(data: GetElementAttrValueData): Promise<void> {
 		const { csspath, attrName, pageUuid } = data;
 		const registry = this.getRegistry();
@@ -282,6 +288,7 @@ class Replayer {
 			registry.sendBrowserOperation(registry.getWorkspaceExtensionId(), e);
 		}
 	}
+
 	private async tryToGetElementPropValue(data: GetElementPropValueData): Promise<void> {
 		const { csspath, propName, pageUuid } = data;
 		const registry = this.getRegistry();
@@ -301,6 +308,7 @@ class Replayer {
 			registry.sendBrowserOperation(registry.getWorkspaceExtensionId(), e);
 		}
 	}
+
 	private async tryToWait(data: WaitData): Promise<void> {
 		const { time } = data;
 		const wait = util.promisify(setTimeout);
@@ -308,6 +316,7 @@ class Replayer {
 		const registry = this.getRegistry();
 		registry.sendBrowserOperation(registry.getWorkspaceExtensionId(), null);
 	}
+
 	private async tryToWaitForElement(data: WaitForElementData): Promise<void> {
 		const {
 			csspath,
@@ -325,73 +334,94 @@ class Replayer {
 			registry.sendBrowserOperation(registry.getWorkspaceExtensionId(), e);
 		}
 	}
+
 	getRegistry(): WorkspaceExtensionRegistry {
 		return this.registry;
 	}
+
 	switchToRecord(): Browser {
 		this.onRecord = true;
 		return this.browser!;
 	}
+
 	isOnRecord(): boolean {
 		return this.onRecord;
 	}
+
 	getLogger(): Console {
 		return this.logger;
 	}
+
 	private getEnvironment() {
 		return this.env;
 	}
+
 	getStoryName(): string {
 		return this.storyName;
 	}
+
 	getFlow(): Flow {
 		return this.flow;
 	}
+
 	getIdentity(): string {
 		return generateKeyByString(this.getStoryName(), this.getFlow().name);
 	}
+
 	/**
 	 * @returns summary object
 	 */
 	getSummary(): ReplaySummary {
 		return this.summary;
 	}
+
 	getSummaryData(): Summary {
 		return this.summary.getSummary();
 	}
+
 	getCoverageData() {
 		return this.coverages;
 	}
+
 	getSteps(): Array<Step> {
 		return this.flow.steps || [];
 	}
+
 	getCurrentIndex(): number {
 		return this.currentIndex;
 	}
+
 	getCurrentStep(): Step {
 		return this.getSteps()[this.getCurrentIndex()];
 	}
+
 	/**
 	 * @returns null only if not start
 	 */
 	getBrowser(): Browser | null {
 		return this.browser;
 	}
+
 	setBrowser(browser: Browser): void {
 		this.browser = browser;
 	}
+
 	getDevice(): Device | null {
 		return this.device;
 	}
+
 	setDevice(device: Device): void {
 		this.device = device;
 	}
+
 	findUuid(page: Page): string | undefined {
 		return Object.keys(this.pages).find(id => this.pages[id] === page);
 	}
+
 	getPage(uuid: string): Page | null {
 		return this.pages[uuid];
 	}
+
 	/**
 	 * get page by given uuid, throw error when not found
 	 */
@@ -403,6 +433,7 @@ class Replayer {
 		await page.bringToFront();
 		return page;
 	}
+
 	/**
 	 * sometimes page speed is very slow, the page-create, page-switch, popup events are not always in correct order on recording.
 	 *
@@ -435,6 +466,7 @@ class Replayer {
 			return true;
 		}
 	}
+
 	/**
 	 * @return removed page or null if not exists
 	 */
@@ -451,18 +483,21 @@ class Replayer {
 			return uuidOrPage;
 		}
 	}
+
 	putRequest(uuid: string, request: Request): void {
 		const requests = this.requests[uuid];
 		if (requests) {
 			this.requests[uuid].create(request);
 		}
 	}
+
 	offsetRequest(uuid: string, request: Request, success: boolean): void {
 		const requests = this.requests[uuid];
 		if (requests) {
 			requests.offset(request, success);
 		}
 	}
+
 	private async isRemoteFinsihed(page: Page): Promise<void> {
 		const uuid = this.findUuid(page)!;
 		const requests = this.requests[uuid];
@@ -470,10 +505,10 @@ class Replayer {
 
 		// peep next step, if not ajax step, resolve directly to speed up
 		const { type } = this.getCurrentStep();
-		if (['page-switched', 'page-created'].includes(type)) {
+		if ([ 'page-switched', 'page-created' ].includes(type)) {
 			return requests.waitForAllDone();
 		}
-		if (['scroll'].includes(type)) {
+		if ([ 'scroll' ].includes(type)) {
 			return new Promise(resolve => setTimeout(resolve, 30));
 		}
 
@@ -486,6 +521,7 @@ class Replayer {
 			return new Promise(resolve => setTimeout(resolve, 30));
 		}
 	}
+
 	private async sleepAfterStep(step: Step): Promise<void> {
 		const sleep = step.sleep;
 		if (sleep && sleep > 0) {
@@ -493,6 +529,7 @@ class Replayer {
 			await wait(sleep);
 		}
 	}
+
 	private async prepareFlow(): Promise<void> {
 		const preparedFlow: WorkspaceExtensions.PreparedFlow | null = await this.getRegistry().flowShouldStart(
 			this.getStoryName(),
@@ -504,7 +541,7 @@ class Replayer {
 			// use definition
 			const { params = [] } = this.getFlow();
 			this.flowInput = params
-				.filter(param => ['in', 'both'].includes(param.type))
+				.filter(param => [ 'in', 'both' ].includes(param.type))
 				.reduce((input, param) => {
 					input[param.name] = param.value;
 					return input;
@@ -513,6 +550,7 @@ class Replayer {
 			this.flowInput = input;
 		}
 	}
+
 	async start() {
 		// TODO how to use prepared story? currently ignored
 		const preparedStory: WorkspaceExtensions.PreparedStory = await this.getRegistry().prepareStory(
@@ -523,6 +561,7 @@ class Replayer {
 		const page = await launchBrowser(this, this.getFlowInput());
 		await this.isRemoteFinsihed(page);
 	}
+
 	private async accomplishFlow(): Promise<void> {
 		const accomplishedFlow: WorkspaceExtensions.AccomplishedFlow | null = await this.getRegistry().flowAccomplished(
 			this.getStoryName(),
@@ -551,7 +590,7 @@ class Replayer {
 			// read out/both from flow input
 			const { params = [] } = this.getFlow();
 			this.flowOutput = params
-				.filter(param => ['out', 'both'].includes(param.type))
+				.filter(param => [ 'out', 'both' ].includes(param.type))
 				.reduce((output, param) => {
 					output[param.name] = this.flowInput[param.name];
 					if (typeof output[param.name] === 'undefined') {
@@ -564,6 +603,7 @@ class Replayer {
 			this.flowOutput = output;
 		}
 	}
+
 	/**
 	 * only called in CI
 	 */
@@ -597,10 +637,11 @@ class Replayer {
 			.off(ExtensionEventTypes.LOG, this.handleExtensionLog)
 			.off(ExtensionEventTypes.ERROR_LOG, this.handleExtensionErrorLog);
 	}
+
 	private replaceWithFlowParams(step: Step): Step {
 		const newStep = { ...step } as any;
 
-		['value'].forEach(propName => {
+		[ 'value' ].forEach(propName => {
 			const value = step[propName];
 			if (!value || typeof value !== 'string') {
 				return;
@@ -613,6 +654,7 @@ class Replayer {
 
 		return newStep as Step;
 	}
+
 	/**
 	 * do next step
 	 */
@@ -743,13 +785,14 @@ class Replayer {
 			if (!accomplishedStep._.passed) {
 				// extension says failed
 				throw accomplishedStep._.error ||
-					new Error(`Fail on step cause by step accomplished extension.`);
+				new Error(`Fail on step cause by step accomplished extension.`);
 			}
 		} catch (e) {
 			await this.handleStepError(step, e);
 			throw e;
 		}
 	}
+
 	private async handleStepError(step: Step, e: any) {
 		const page = this.getPage(step.uuid);
 		this.getSummary().handleError(step, e);
@@ -760,6 +803,7 @@ class Replayer {
 			this.getLogger().log("page don't exsit ");
 		}
 	}
+
 	private async executeChangeStep(step: ChangeStep): Promise<void> {
 		const page = await this.getPageOrThrow(step.uuid);
 		const xpath = this.transformStepPathToXPath(step.path);
@@ -798,11 +842,11 @@ class Replayer {
 			fs.writeFileSync(filepath, Buffer.from(ia));
 
 			// file upload
-			const [fileChooser] = await Promise.all([
+			const [ fileChooser ] = await Promise.all([
 				page.waitForFileChooser(),
 				element.evaluate((node: Element) => (node as HTMLElement).click())
 			]);
-			await fileChooser.accept([filepath]);
+			await fileChooser.accept([ filepath ]);
 		} else {
 			// change is change only, cannot use type
 			await this.setValueToElement(element, step.value!);
@@ -822,6 +866,7 @@ class Replayer {
 			}
 		}
 	}
+
 	private async executeClickStep(step: ClickStep): Promise<void> {
 		const page = await this.getPageOrThrow(step.uuid);
 		const xpath = this.transformStepPathToXPath(step.path);
@@ -848,7 +893,7 @@ class Replayer {
 
 		if (elementTagName === 'INPUT') {
 			const elementType = await this.getElementType(element);
-			if (elementType && ['checkbox', 'radio'].includes(elementType.toLowerCase())) {
+			if (elementType && [ 'checkbox', 'radio' ].includes(elementType.toLowerCase())) {
 				// there are some ui-repos, show a div/span/i etc instead of checkbox itself
 				// and invoke click event by javascript when user click the visible component
 				// it will causes record the click and change event
@@ -878,6 +923,7 @@ class Replayer {
 			await element.evaluate((node: Element) => (node as HTMLElement).click());
 		}
 	}
+
 	private async executeFocusStep(step: FocusStep): Promise<void> {
 		const page = await this.getPageOrThrow(step.uuid);
 		const xpath = this.transformStepPathToXPath(step.path);
@@ -891,6 +937,7 @@ class Replayer {
 			node.dispatchEvent(event);
 		});
 	}
+
 	private async executeKeydownStep(step: KeydownStep): Promise<void> {
 		const page = await this.getPageOrThrow(step.uuid);
 		const xpath = this.transformStepPathToXPath(step.path);
@@ -926,6 +973,7 @@ class Replayer {
 				break;
 		}
 	}
+
 	private async executeMousedownStep(step: MousedownStep): Promise<void> {
 		const page = await this.getPageOrThrow(step.uuid);
 		const xpath = this.transformStepPathToXPath(step.path);
@@ -948,10 +996,12 @@ class Replayer {
 			await element.click();
 		}
 	}
+
 	private async executeAnimationStep(step: AnimationStep): Promise<void> {
 		const wait = util.promisify(setTimeout);
 		await wait(step.duration!);
 	}
+
 	private async executeScrollStep(step: ScrollStep): Promise<void> {
 		const page = await this.getPageOrThrow(step.uuid);
 
@@ -978,17 +1028,21 @@ class Replayer {
 			);
 		}
 	}
+
 	private async executeDialogOpenStep(step: DialogOpenStep): Promise<void> {
 		// dialog open is invoked by javascript anyway, ignore it
 		this.getLogger().log(`Execute ${step.dialog} open, step url is ${step.url}.`);
 	}
+
 	private async executeDialogCloseStep(step: DialogCloseStep): Promise<void> {
 		// dialog close is invoked manually anyway, should be handled in page popup event, ignore it
 		this.getLogger().log(`Execute ${step.dialog} close, step url is ${step.url}.`);
 	}
+
 	private async executeAjaxStep(step: AjaxStep): Promise<void> {
 		this.getLogger().log(`Execute ajax, step url is ${step.request && step.request.url}.`);
 	}
+
 	private async executePageCreatedStep(step: PageCreatedStep): Promise<void> {
 		this.getLogger().debug(`Execute page created, step url is ${step.url}.`);
 		const page = this.getPage(step.uuid);
@@ -1021,6 +1075,7 @@ class Replayer {
 			}
 		}
 	}
+
 	private async executePageSwitchedStep(step: PageSwitchStep): Promise<void> {
 		this.getLogger().debug(`Execute page switched, step url is ${step.url}.`);
 		const page = this.getPage(step.uuid);
@@ -1029,11 +1084,15 @@ class Replayer {
 			// since sometimes they have random token
 			const url = shorternUrl(page.url());
 			const newUrl = shorternUrl(step.url!);
-			if (newUrl !== url) {
+			// use regexp matcher
+			const match = (): boolean => {
+				return step.matcher ? new RegExp(step.matcher).test(url) : false;
+			};
+			if (newUrl !== url && match()) {
 				const sleep = util.promisify(setTimeout);
 				await sleep(1000);
 				const url = shorternUrl(page.url());
-				if (newUrl !== url) {
+				if (newUrl !== url && match()) {
 					await Promise.all([
 						page.waitForNavigation(),
 						page.goto(step.url!, { waitUntil: 'domcontentloaded' })
@@ -1066,6 +1125,7 @@ class Replayer {
 			}
 		}
 	}
+
 	private async executePageClosedStep(step: PageClosedStep): Promise<void> {
 		this.getLogger().debug(`Execute page closed, step url is ${step.url}.`);
 		const page = this.getPage(step.uuid);
@@ -1073,6 +1133,7 @@ class Replayer {
 			await page.close();
 		}
 	}
+
 	private createThirdStepSupport(page: Page, element: ElementHandle): ThirdStepSupport {
 		return new ThirdStepSupport({
 			page,
@@ -1086,6 +1147,7 @@ class Replayer {
 			logger: this.getLogger()
 		});
 	}
+
 	private async findElement(step: Step, page: Page): Promise<ElementHandle> {
 		const xpath = this.transformStepPathToXPath(step.path!);
 		const elements = await page.$x(xpath);
@@ -1144,6 +1206,7 @@ class Replayer {
 
 		throw new Error(`Cannot find element by ${paths}.`);
 	}
+
 	private createElementTagNameRetriever(): ElementRetriever {
 		let tagName: string;
 		return async (element: ElementHandle): Promise<string> => {
@@ -1153,9 +1216,11 @@ class Replayer {
 			return tagName;
 		};
 	}
+
 	private async getElementTagName(element: ElementHandle): Promise<string> {
 		return await element.evaluate(node => node.tagName);
 	}
+
 	private createElementTypeRetriever(): ElementRetriever {
 		let elementType: string;
 		return async (element: ElementHandle): Promise<string> => {
@@ -1165,12 +1230,15 @@ class Replayer {
 			return elementType;
 		};
 	}
+
 	private async getElementType(element: ElementHandle): Promise<string> {
 		return (await element.evaluate(node => node.getAttribute('type'))) || '';
 	}
+
 	private async getElementChecked(element: ElementHandle): Promise<boolean> {
 		return await element.evaluate((node: Element) => (node as HTMLInputElement).checked);
 	}
+
 	private createElementClassNamesRetriever(): ElementRetriever {
 		let classNames: string;
 		return async (element: ElementHandle): Promise<string> => {
@@ -1180,6 +1248,7 @@ class Replayer {
 			return classNames;
 		};
 	}
+
 	private createElementAttrValueRetriever(): ElementAttributeValueRetriever {
 		const values: { [key in string]: string | null } = {};
 		return async (element: ElementHandle, attrName: string): Promise<string> => {
@@ -1194,20 +1263,24 @@ class Replayer {
 			return values[attrName]!;
 		};
 	}
+
 	private async getElementAttrValue(element: ElementHandle, attrName: string): Promise<string> {
 		return await element.evaluate((node, attr) => node.getAttribute(attr)!, attrName);
 	}
+
 	private async getElementValue(element: ElementHandle): Promise<string> {
 		return await element.evaluate(
 			(node: Element) => (node as HTMLInputElement | HTMLSelectElement).value
 		);
 	}
+
 	private async isElementVisible(element: ElementHandle): Promise<boolean> {
 		return await element.evaluate(
 			(node: Element) =>
 				(node as HTMLElement).offsetWidth > 0 && (node as HTMLElement).offsetHeight > 0
 		);
 	}
+
 	private async setValueToElement(element: ElementHandle, value: string) {
 		const tagName = await this.getElementTagName(element);
 
@@ -1216,7 +1289,7 @@ class Replayer {
 			const type = await this.getElementType(element);
 			if (
 				!type ||
-				['text', 'password', 'url', 'search', 'email', 'hidden', 'number', 'tel'].includes(
+				[ 'text', 'password', 'url', 'search', 'email', 'hidden', 'number', 'tel' ].includes(
 					type.toLowerCase()
 				)
 			) {
@@ -1242,7 +1315,7 @@ class Replayer {
 		await element.evaluate((node: Element, value) => {
 			const element = node as HTMLInputElement;
 			if (
-				!['checkbox', 'radio'].includes(
+				![ 'checkbox', 'radio' ].includes(
 					(element.getAttribute('type') || '').toLowerCase()
 				) ||
 				element.value != value
@@ -1254,6 +1327,7 @@ class Replayer {
 			}
 		}, value);
 	}
+
 	private transformStepPathToXPath(stepPath: string): string {
 		return stepPath.replace(/"/g, "'");
 	}

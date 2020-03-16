@@ -275,9 +275,25 @@ exports.controlPage = function (replayer, page, device, uuid) { return __awaiter
                                 pageCreateStep = steps
                                     .filter(function (step, index) { return index >= currentIndex; })
                                     .find(function (step) {
-                                    return (step.type === 'page-created' &&
-                                        (step.forStepUuid === currentStep.stepUuid ||
-                                            newUrl === utils_1.shorternUrl(step.url)));
+                                    if (step.type !== 'page-created') {
+                                        return false;
+                                    }
+                                    var createStep = step;
+                                    if (createStep.forStepUuid === currentStep.stepUuid) {
+                                        return true;
+                                    }
+                                    else if (newUrl === utils_1.shorternUrl(createStep.url)) {
+                                        return true;
+                                    }
+                                    else if (createStep.matcher && new RegExp(createStep.matcher).test(newUrl)) {
+                                        return true;
+                                    }
+                                    return false;
+                                    // return (
+                                    // 	step.type === 'page-created' &&
+                                    // 	((step as PageCreatedStep).forStepUuid === currentStep.stepUuid ||
+                                    // 		newUrl === shorternUrl((step as PageCreatedStep).url!))
+                                    // );
                                 });
                                 if (pageCreateStep == null) {
                                     replayer
