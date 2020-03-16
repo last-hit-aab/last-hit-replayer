@@ -1149,6 +1149,17 @@ class Replayer {
 	}
 
 	private async findElement(step: Step, page: Page): Promise<ElementHandle> {
+		const dataPath = step.datapath;
+		if (dataPath) {
+			const count = await page.evaluate(dataPath => document.querySelectorAll(dataPath).length, dataPath);
+			if (count === 1) {
+				const element = await page.$(dataPath);
+				if (element) {
+					return element;
+				}
+			}
+		}
+
 		const xpath = this.transformStepPathToXPath(step.path!);
 		const elements = await page.$x(xpath);
 		if (elements && elements.length === 1) {
@@ -1156,28 +1167,22 @@ class Replayer {
 		}
 
 		// fallback to css path
-		const csspath = step.csspath;
-		if (csspath) {
-			const count = await page.evaluate(
-				csspath => document.querySelectorAll(csspath).length,
-				csspath
-			);
+		const cssPath = step.csspath;
+		if (cssPath) {
+			const count = await page.evaluate(cssPath => document.querySelectorAll(cssPath).length, cssPath);
 			if (count === 1) {
-				const element = await page.$(csspath);
+				const element = await page.$(cssPath);
 				if (element) {
 					return element;
 				}
 			}
 		}
 
-		const custompath = step.custompath;
-		if (custompath) {
-			const count = await page.evaluate(
-				csspath => document.querySelectorAll(csspath).length,
-				custompath
-			);
+		const customPath = step.custompath;
+		if (customPath) {
+			const count = await page.evaluate(customPath => document.querySelectorAll(customPath).length, customPath);
 			if (count === 1) {
-				const element = await page.$(custompath);
+				const element = await page.$(customPath);
 				if (element) {
 					return element;
 				}
@@ -1197,7 +1202,7 @@ class Replayer {
 		}
 
 		const paths = (() => {
-			const paths = { xpath, csspath, custompath };
+			const paths = { xpath, csspath: cssPath, custompath: customPath, datapath: dataPath };
 			return Object.keys(paths)
 				.filter(key => paths[key])
 				.map(key => `${key}[${paths[key]}]`)

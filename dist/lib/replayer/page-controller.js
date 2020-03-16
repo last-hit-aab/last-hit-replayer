@@ -270,7 +270,7 @@ exports.controlPage = function (replayer, page, device, uuid) { return __awaiter
                                 }
                                 newUrl = utils_1.shorternUrl(newPage.url());
                                 steps = replayer.getSteps();
-                                currentIndex = replayer.getCurrentIndex();
+                                currentIndex = Math.max(replayer.getCurrentIndex() - 1, 0);
                                 currentStep = steps[currentIndex];
                                 pageCreateStep = steps
                                     .filter(function (step, index) { return index >= currentIndex; })
@@ -279,7 +279,6 @@ exports.controlPage = function (replayer, page, device, uuid) { return __awaiter
                                         return false;
                                     }
                                     var createStep = step;
-                                    console.log('find create step', createStep.forStepUuid, currentStep.stepUuid);
                                     if (createStep.forStepUuid === currentStep.stepUuid) {
                                         return true;
                                     }
@@ -290,11 +289,6 @@ exports.controlPage = function (replayer, page, device, uuid) { return __awaiter
                                         return true;
                                     }
                                     return false;
-                                    // return (
-                                    // 	step.type === 'page-created' &&
-                                    // 	((step as PageCreatedStep).forStepUuid === currentStep.stepUuid ||
-                                    // 		newUrl === shorternUrl((step as PageCreatedStep).url!))
-                                    // );
                                 });
                                 if (pageCreateStep == null) {
                                     replayer

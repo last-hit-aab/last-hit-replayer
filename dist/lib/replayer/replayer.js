@@ -1426,38 +1426,38 @@ var Replayer = /** @class */ (function () {
     };
     Replayer.prototype.findElement = function (step, page) {
         return __awaiter(this, void 0, void 0, function () {
-            var xpath, elements, csspath, count, element, custompath, count, element, frames, index, frame, element, paths;
+            var dataPath, count, element, xpath, elements, cssPath, count, element, customPath, count, element, frames, index, frame, element, paths;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        xpath = this.transformStepPathToXPath(step.path);
-                        return [4 /*yield*/, page.$x(xpath)];
+                        dataPath = step.datapath;
+                        if (!dataPath) return [3 /*break*/, 3];
+                        return [4 /*yield*/, page.evaluate(function (dataPath) { return document.querySelectorAll(dataPath).length; }, dataPath)];
                     case 1:
-                        elements = _a.sent();
-                        if (elements && elements.length === 1) {
-                            return [2 /*return*/, elements[0]];
-                        }
-                        csspath = step.csspath;
-                        if (!csspath) return [3 /*break*/, 4];
-                        return [4 /*yield*/, page.evaluate(function (csspath) { return document.querySelectorAll(csspath).length; }, csspath)];
-                    case 2:
                         count = _a.sent();
-                        if (!(count === 1)) return [3 /*break*/, 4];
-                        return [4 /*yield*/, page.$(csspath)];
-                    case 3:
+                        if (!(count === 1)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, page.$(dataPath)];
+                    case 2:
                         element = _a.sent();
                         if (element) {
                             return [2 /*return*/, element];
                         }
-                        _a.label = 4;
+                        _a.label = 3;
+                    case 3:
+                        xpath = this.transformStepPathToXPath(step.path);
+                        return [4 /*yield*/, page.$x(xpath)];
                     case 4:
-                        custompath = step.custompath;
-                        if (!custompath) return [3 /*break*/, 7];
-                        return [4 /*yield*/, page.evaluate(function (csspath) { return document.querySelectorAll(csspath).length; }, custompath)];
+                        elements = _a.sent();
+                        if (elements && elements.length === 1) {
+                            return [2 /*return*/, elements[0]];
+                        }
+                        cssPath = step.csspath;
+                        if (!cssPath) return [3 /*break*/, 7];
+                        return [4 /*yield*/, page.evaluate(function (cssPath) { return document.querySelectorAll(cssPath).length; }, cssPath)];
                     case 5:
                         count = _a.sent();
                         if (!(count === 1)) return [3 /*break*/, 7];
-                        return [4 /*yield*/, page.$(custompath)];
+                        return [4 /*yield*/, page.$(cssPath)];
                     case 6:
                         element = _a.sent();
                         if (element) {
@@ -1465,26 +1465,40 @@ var Replayer = /** @class */ (function () {
                         }
                         _a.label = 7;
                     case 7:
-                        frames = page.frames();
-                        if (!(frames.length > 0)) return [3 /*break*/, 11];
-                        index = 0;
-                        _a.label = 8;
+                        customPath = step.custompath;
+                        if (!customPath) return [3 /*break*/, 10];
+                        return [4 /*yield*/, page.evaluate(function (customPath) { return document.querySelectorAll(customPath).length; }, customPath)];
                     case 8:
-                        if (!(index < frames.length)) return [3 /*break*/, 11];
+                        count = _a.sent();
+                        if (!(count === 1)) return [3 /*break*/, 10];
+                        return [4 /*yield*/, page.$(customPath)];
+                    case 9:
+                        element = _a.sent();
+                        if (element) {
+                            return [2 /*return*/, element];
+                        }
+                        _a.label = 10;
+                    case 10:
+                        frames = page.frames();
+                        if (!(frames.length > 0)) return [3 /*break*/, 14];
+                        index = 0;
+                        _a.label = 11;
+                    case 11:
+                        if (!(index < frames.length)) return [3 /*break*/, 14];
                         frame = frames[index];
                         return [4 /*yield*/, frame.$x(xpath)];
-                    case 9:
+                    case 12:
                         element = _a.sent();
                         if (element.length === 1) {
                             return [2 /*return*/, element[0]];
                         }
-                        _a.label = 10;
-                    case 10:
+                        _a.label = 13;
+                    case 13:
                         index++;
-                        return [3 /*break*/, 8];
-                    case 11:
+                        return [3 /*break*/, 11];
+                    case 14:
                         paths = (function () {
-                            var paths = { xpath: xpath, csspath: csspath, custompath: custompath };
+                            var paths = { xpath: xpath, csspath: cssPath, custompath: customPath, datapath: dataPath };
                             return Object.keys(paths)
                                 .filter(function (key) { return paths[key]; })
                                 .map(function (key) { return key + "[" + paths[key] + "]"; })

@@ -197,7 +197,9 @@ export const controlPage = async (replayer: Replayer, page: Page, device: Device
 		const newUrl = shorternUrl(newPage.url());
 		// find steps from next step of current step, the closest page-created event
 		const steps = replayer.getSteps();
-		const currentIndex = replayer.getCurrentIndex();
+		// step might be quickly, current index is forwarded
+		// back one step to avoid this
+		const currentIndex = Math.max(replayer.getCurrentIndex() - 1, 0);
 		const currentStep = steps[currentIndex];
 		// IMPORTANT do not compare url here, since might have random token. only path compare is necessary
 		const pageCreateStep = steps
@@ -208,7 +210,6 @@ export const controlPage = async (replayer: Replayer, page: Page, device: Device
 				}
 
 				const createStep = step as PageCreatedStep;
-				console.log('find create step', createStep.forStepUuid, currentStep.stepUuid);
 				if (createStep.forStepUuid === currentStep.stepUuid) {
 					return true;
 				} else if (newUrl === shorternUrl(createStep.url!)) {
@@ -218,11 +219,6 @@ export const controlPage = async (replayer: Replayer, page: Page, device: Device
 				}
 
 				return false;
-				// return (
-				// 	step.type === 'page-created' &&
-				// 	((step as PageCreatedStep).forStepUuid === currentStep.stepUuid ||
-				// 		newUrl === shorternUrl((step as PageCreatedStep).url!))
-				// );
 			});
 		if (pageCreateStep == null) {
 			replayer
