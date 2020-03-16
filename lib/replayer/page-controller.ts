@@ -208,6 +208,7 @@ export const controlPage = async (replayer: Replayer, page: Page, device: Device
 				}
 
 				const createStep = step as PageCreatedStep;
+				console.log('find create step', createStep.forStepUuid, currentStep.stepUuid);
 				if (createStep.forStepUuid === currentStep.stepUuid) {
 					return true;
 				} else if (newUrl === shorternUrl(createStep.url!)) {

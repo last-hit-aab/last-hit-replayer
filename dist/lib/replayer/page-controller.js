@@ -279,6 +279,7 @@ exports.controlPage = function (replayer, page, device, uuid) { return __awaiter
                                         return false;
                                     }
                                     var createStep = step;
+                                    console.log('find create step', createStep.forStepUuid, currentStep.stepUuid);
                                     if (createStep.forStepUuid === currentStep.stepUuid) {
                                         return true;
                                     }
