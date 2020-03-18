@@ -78,7 +78,7 @@ var binarySearch = function (target, array) {
     return 0 - middleIndex;
 };
 exports.print = function (env) { return __awaiter(void 0, void 0, void 0, function () {
-    var reports, coverageMap, allCoverageData, workspace, resultTempFolder, adminUrl, used, response;
+    var reports, coverageMap, allCoverageData, workspace, resultTempFolder, adminUrl, used, response, e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -117,9 +117,11 @@ exports.print = function (env) { return __awaiter(void 0, void 0, void 0, functi
                 });
                 report_generator_1.generateReport({ filename: 'report.html', results: reports });
                 adminUrl = env.getAdminUrl();
-                console.log(adminUrl);
-                if (!adminUrl) return [3 /*break*/, 2];
+                if (!adminUrl) return [3 /*break*/, 4];
                 used = utils_1.endTime('all-used');
+                _a.label = 1;
+            case 1:
+                _a.trys.push([1, 3, , 4]);
                 return [4 /*yield*/, axios_1.default.post(adminUrl, {
                         spent: used,
                         summary: reports,
@@ -131,11 +133,15 @@ exports.print = function (env) { return __awaiter(void 0, void 0, void 0, functi
                             authorization: env.getAdminToken()
                         }
                     })];
-            case 1:
-                response = _a.sent();
-                console.log(response);
-                _a.label = 2;
             case 2:
+                response = _a.sent();
+                return [3 /*break*/, 4];
+            case 3:
+                e_1 = _a.sent();
+                console.error('failed to push summary to admin server');
+                console.error(e_1);
+                return [3 /*break*/, 4];
+            case 4:
                 pti.write(allCoverageData);
                 child_process_1.spawnSync('nyc', ['report', '--reporter=html'], { stdio: 'inherit' });
                 console.table(reports.map(function (item) {

@@ -1,4 +1,11 @@
 "use strict";
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -58,7 +65,7 @@ exports.generateKeyByString = function (storyName, flowName) {
  */
 exports.findFlows = function (env) {
     var workspace = env.getWorkspace();
-    return fs_1.default
+    var flows = fs_1.default
         .readdirSync(workspace)
         .filter(function (dir) { return fs_1.default.statSync(path_1.default.join(workspace, dir)).isDirectory(); })
         .filter(function (dir) { return !['.scripts'].includes(dir); })
@@ -79,15 +86,47 @@ exports.findFlows = function (env) {
         flows.push.apply(flows, array);
         return flows;
     }, []);
+    var flowMap = {};
+    var necessaryFlows = flows.map(function (flowFile) {
+        flowMap[exports.generateKeyByString(flowFile.story, flowFile.flow)] = flowFile;
+        return flowFile;
+    }).reduce(function (necessary, flowFile) {
+        var _a = env.readFlowFile(flowFile.story, flowFile.flow).settings, _b = _a === void 0 ? {
+            forceDepends: undefined,
+            dataDepends: undefined
+        } : _a, forceDepends = _b.forceDepends, _c = _b.dataDepends, dataDepends = _c === void 0 ? [] : _c;
+        if (forceDepends) {
+            var story = forceDepends.story, flow = forceDepends.flow;
+            var key = exports.generateKeyByString(story, flow);
+            if (!flowMap[key]) {
+                // not include, includes it
+                var add = { story: story, flow: flow };
+                necessary.push(add);
+                flowMap[key] = add;
+            }
+        }
+        dataDepends.forEach(function (_a) {
+            var story = _a.story, flow = _a.flow;
+            var key = exports.generateKeyByString(story, flow);
+            if (!flowMap[key]) {
+                // not include, includes it
+                var add = { story: story, flow: flow };
+                necessary.push(add);
+                flowMap[key] = add;
+            }
+        });
+        return necessary;
+    }, []);
+    return __spreadArrays(necessaryFlows, flows);
 };
 var defaultName = 'last-hit';
 var starts = {};
 exports.startTime = function (name) {
-    if (name === void 0) { name = 'last-hit'; }
-    starts[defaultName] = new Date().getTime();
+    if (name === void 0) { name = defaultName; }
+    starts[name] = new Date().getTime();
 };
 exports.endTime = function (name) {
-    if (name === void 0) { name = 'last-hit'; }
+    if (name === void 0) { name = defaultName; }
     var now = new Date().getTime();
     var start = starts[name];
     if (start) {

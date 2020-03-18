@@ -59,10 +59,10 @@ export const generateKeyByString = (storyName: string, flowName: string): string
  */
 export const findFlows = (env: Environment): FlowFile[] => {
 	const workspace = env.getWorkspace();
-	return fs
+	const flows = fs
 		.readdirSync(workspace)
 		.filter(dir => fs.statSync(path.join(workspace, dir)).isDirectory())
-		.filter(dir => !['.scripts'].includes(dir))
+		.filter(dir => ![ '.scripts' ].includes(dir))
 		.map(storyName => {
 			return fs
 				.readdirSync(path.join(workspace, storyName))
@@ -81,15 +81,48 @@ export const findFlows = (env: Environment): FlowFile[] => {
 			flows.push(...array);
 			return flows;
 		}, [] as FlowFile[]);
+	const flowMap: { [key in string]: FlowFile } = {};
+	const necessaryFlows = flows.map(flowFile => {
+		flowMap[generateKeyByString(flowFile.story, flowFile.flow)] = flowFile;
+		return flowFile;
+	}).reduce((necessary, flowFile) => {
+		const {
+			settings: { forceDepends, dataDepends = [] } = {
+				forceDepends: undefined,
+				dataDepends: undefined
+			}
+		} = env.readFlowFile(flowFile.story, flowFile.flow);
+		if (forceDepends) {
+			const { story, flow } = forceDepends;
+			const key = generateKeyByString(story, flow);
+			if (!flowMap[key]) {
+				// not include, includes it
+				const add = { story, flow };
+				necessary.push(add);
+				flowMap[key] = add;
+			}
+		}
+		dataDepends.forEach(({ story, flow }) => {
+			const key = generateKeyByString(story, flow);
+			if (!flowMap[key]) {
+				// not include, includes it
+				const add = { story, flow };
+				necessary.push(add);
+				flowMap[key] = add;
+			}
+		});
+		return necessary;
+	}, [] as FlowFile[]);
+	return [ ...necessaryFlows, ...flows ];
 };
 
 const defaultName = 'last-hit';
 let starts: { [key in string]: number } = {};
-export const startTime = (name: string = 'last-hit') => {
-	starts[defaultName] = new Date().getTime();
+export const startTime = (name: string = defaultName) => {
+	starts[name] = new Date().getTime();
 };
 
-export const endTime = (name: string = 'last-hit') => {
+export const endTime = (name: string = defaultName) => {
 	const now = new Date().getTime();
 	const start = starts[name];
 	if (start) {

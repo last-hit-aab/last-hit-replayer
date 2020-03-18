@@ -69,6 +69,17 @@ var readConfigFile = function (workspace) {
     else {
         config = {};
     }
+    var configJson = yargs_1.argv['config-json'];
+    delete yargs_1.argv['config-json'];
+    if (configJson) {
+        try {
+            var json = JSON.parse(configJson);
+            config = Object.assign(config, json);
+        }
+        catch (e) {
+            console.error('failed to parse config json from cli');
+        }
+    }
     config.workspace = workspace;
     // story or flow is appointed via cli, has highest priority
     var storyName = yargs_1.argv.story;

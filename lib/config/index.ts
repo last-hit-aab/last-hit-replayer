@@ -33,13 +33,23 @@ const readConfigFile = (workspace: string): Config => {
 	} else {
 		config = {} as Config;
 	}
+	const configJson = args['config-json'] as string | null;
+	delete args['config-json'];
+	if (configJson) {
+		try {
+			const json = JSON.parse(configJson);
+			config = Object.assign(config, json);
+		} catch (e) {
+			console.error('failed to parse config json from cli');
+		}
+	}
 	config.workspace = workspace;
 
 	// story or flow is appointed via cli, has highest priority
 	const storyName = args.story as string | undefined;
 	const flowName = args.flow as string | undefined;
 	if (storyName) {
-		config.includes = [{ story: storyName, flow: flowName }];
+		config.includes = [ { story: storyName, flow: flowName } ];
 	}
 
 	// env name are appointed via cli, has highest priority

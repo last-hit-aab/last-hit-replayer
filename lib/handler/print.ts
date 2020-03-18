@@ -73,21 +73,25 @@ export const print = async (env: Environment): Promise<void> => {
 	generateReport({ filename: 'report.html', results: reports });
 
 	const adminUrl = env.getAdminUrl();
-	console.log(adminUrl);
+	// console.log(adminUrl);
 	if (adminUrl) {
 		const used = endTime('all-used');
-		const response = await axios.post(adminUrl, {
-			spent: used,
-			summary: reports,
-			testPlan: {
-				id: env.getAdminTestPlanId()
-			}
-		}, {
-			headers: {
-				authorization: env.getAdminToken()
-			}
-		});
-		console.log(response);
+		try {
+			const response = await axios.post(adminUrl, {
+				spent: used,
+				summary: reports,
+				testPlan: {
+					id: env.getAdminTestPlanId()
+				}
+			}, {
+				headers: {
+					authorization: env.getAdminToken()
+				}
+			});
+		} catch (e) {
+			console.error('failed to push summary to admin server');
+			console.error(e);
+		}
 	}
 	pti.write(allCoverageData);
 	spawnSync('nyc', [ 'report', '--reporter=html' ], { stdio: 'inherit' });
