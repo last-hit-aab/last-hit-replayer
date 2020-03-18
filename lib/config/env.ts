@@ -6,10 +6,8 @@ import path from 'path';
 import { EnvironmentOptions, IncludingFilter, IncludingFilters } from '../types';
 
 type Wrapper = (step: Step) => Step;
-type SimpleEnvironmentOptions = Omit<
-	EnvironmentOptions,
-	'parallel' | 'workspace' | 'includes' | 'child'
->;
+type SimpleEnvironmentOptions = Omit<EnvironmentOptions,
+	'parallel' | 'workspace' | 'includes' | 'child'>;
 
 class Environment {
 	/** environment name */
@@ -23,6 +21,7 @@ class Environment {
 	private includes?: IncludingFilters;
 	private parallel?: number;
 	private child: boolean;
+	private adminUrl?: string;
 
 	private wrappers: Wrapper[];
 
@@ -39,11 +38,15 @@ class Environment {
 		this.parallel = this.computeParallel(options.parallel);
 		this.child = options.child || false;
 
-		this.wrappers = [this.wrapUrl];
+		this.adminUrl = options.adminUrl;
+
+		this.wrappers = [ this.wrapUrl ];
 	}
+
 	getOriginalOptions(): EnvironmentOptions {
 		return this.originalOptions;
 	}
+
 	mergeFrom(options: SimpleEnvironmentOptions) {
 		this.name = options.name || this.name;
 		if (options.urlReplaceRegexp) {
@@ -61,13 +64,21 @@ class Environment {
 		this.slowAjaxTime = options.slowAjaxTime || this.slowAjaxTime;
 
 		// set original options
-		['name', 'urlReplaceRegexp', 'urlReplaceTo', 'sleepAfterChange', 'slowAjaxTime'].forEach(
+		[
+			'name',
+			'urlReplaceRegexp', 'urlReplaceTo',
+			'sleepAfterChange', 'slowAjaxTime',
+			'parallel',
+			'adminUrl'
+		].forEach(
 			prop => (this.originalOptions[prop] = options[prop])
 		);
 	}
+
 	wrap(step: Step): Step {
 		return this.getWrappers().reduce((step, wrapper) => wrapper.call(this, step), step);
 	}
+
 	private wrapUrl(step: Step): Step {
 		const regexps = this.getUrlReplaceRegexps();
 		if ((step as any).url && regexps) {
@@ -77,27 +88,35 @@ class Environment {
 		}
 		return step;
 	}
+
 	private getWrappers(): Wrapper[] {
 		return this.wrappers;
 	}
+
 	getName(): string {
 		return this.name;
 	}
+
 	getWorkspace(): string {
 		return this.workspace;
 	}
+
 	getUrlReplaceRegexps(): RegExp[] {
 		return this.urlReplaceRegexps;
 	}
+
 	getUrlReplaceTos(): string[] {
 		return this.urlReplaceTos;
 	}
+
 	getSleepAfterChange(): number | undefined {
 		return this.sleepAfterChange;
 	}
+
 	getSlowAjaxTime(): number {
 		return this.slowAjaxTime || 500;
 	}
+
 	isIncluded(storyName: string, flowName: string): boolean {
 		return (
 			// no filters, including all
@@ -109,16 +128,24 @@ class Environment {
 			})
 		);
 	}
+
 	isExcluded(storyName: string, flowName: string): boolean {
 		// TODO not supported yet, always returns false
 		return false;
 	}
+
 	getParallel(): number {
 		return this.parallel || 1;
 	}
+
 	isOnParallel(): boolean {
 		return this.getParallel() !== 1;
 	}
+
+	getAdminUrl(): string | undefined {
+		return this.adminUrl;
+	}
+
 	private computeParallel(parallel: number = 1): number {
 		parallel = Math.abs(parallel);
 		if (parseInt(`${parallel}`) !== parallel) {
@@ -127,9 +154,11 @@ class Environment {
 			return parallel;
 		}
 	}
+
 	isOnChildProcess(): boolean {
 		return this.child;
 	}
+
 	exposeForSingleProcess(replacement: { includes: IncludingFilters }): EnvironmentOptions {
 		const options = Object.assign({}, this.originalOptions);
 		delete options.parallel;
@@ -140,6 +169,7 @@ class Environment {
 
 		return options;
 	}
+
 	expose(): SimpleEnvironmentOptions {
 		const options = Object.assign({}, this.originalOptions);
 		delete options.parallel;
@@ -148,15 +178,18 @@ class Environment {
 		delete options.child;
 		return options;
 	}
+
 	static exposeNoop(): EnvironmentOptions {
 		return {
 			// name: 'NO-ENVIRONMENT'
 		} as EnvironmentOptions;
 	}
+
 	isStoryExists(storyName: string): boolean {
 		const dependsStoryFolder = path.join(this.getWorkspace(), storyName);
 		return fs.existsSync(dependsStoryFolder) && fs.statSync(dependsStoryFolder).isDirectory();
 	}
+
 	isFlowExists(storyName: string, flowName: string): boolean {
 		const dependsStoryFolder = path.join(this.getWorkspace(), storyName);
 		if (!this.isStoryExists(storyName)) {
@@ -165,6 +198,7 @@ class Environment {
 		const dependsFlowFilename = path.join(dependsStoryFolder, `${flowName}.flow.json`);
 		return fs.existsSync(dependsFlowFilename) && fs.statSync(dependsFlowFilename).isFile();
 	}
+
 	readFlowFile(storyName: string, flowName: string): Flow {
 		const dependsStoryFolder = path.join(this.getWorkspace(), storyName);
 		const filename = path.join(dependsStoryFolder, `${flowName}.flow.json`);

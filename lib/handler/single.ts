@@ -2,7 +2,7 @@ import fs from 'fs';
 import jsonfile from 'jsonfile';
 import path from 'path';
 import Environment from '../config/env';
-import { Coverages, FlowFile, Report } from '../types';
+import { Coverages, FlowFile, Report, SlowAjax } from '../types';
 import { getLogger, getProcessId } from '../utils';
 import { print } from './print';
 import { handleFlow } from './single-flow';
@@ -70,37 +70,54 @@ export const doOnSingleProcess = async (flows: FlowFile[], env: Environment): Pr
 					}
 				} catch (e) {
 					logger.error(e);
-				} finally {
-					// do nothing
-					return Promise.resolve();
 				}
+				return Promise.resolve();
 			}, Promise.resolve());
 		};
 		let countLeft = pendingFlows.length;
 		while (pendingFlows.length !== 0) {
-			const flows = [...pendingFlows];
+			const flows = [ ...pendingFlows ];
 			pendingFlows.length = 0;
 			await run(flows);
 			if (countLeft === pendingFlows.length) {
 				// nothing can be run
 				jammed = true;
+				reports.push(...pendingFlows.map(flowFile => {
+					const flowContent = env.readFlowFile(flowFile.story, flowFile.flow);
+					return {
+						storyName: flowFile.story,
+						flowName: flowFile.flow,
+						numberOfStep: (flowContent.steps || []).length,
+						numberOfUIBehavior: 0,
+						numberOfSuccess: 0,
+						numberOfAjax: 0,
+						numberOfAssert: 0,
+						numberOfFailed: 0,
+						errorStack: '',
+						flowParams: (flowContent.params || []).filter(param => param.type === 'both' || param.type === 'in'),
+						jammed: true,
+						spent: `${flowFile.flow}@${flowFile.story}: 0ms\n`
+					} as Report;
+				}));
 				break;
 			} else {
 				countLeft = pendingFlows.length;
 			}
 		}
-	} finally {
-		const isChildProcess = env.isOnChildProcess();
+	} catch {
+		// ignore
+	}
 
-		jsonfile.writeFileSync(path.join(threadTempFolder, 'summary.json'), reports);
-		jsonfile.writeFileSync(path.join(threadTempFolder, 'coverages.json'), allCoverages);
+	const isChildProcess = env.isOnChildProcess();
 
-		// print when not child process
-		!isChildProcess && print(env);
-		console.info((`Process[${processId}] finished`.bold as any).green);
+	jsonfile.writeFileSync(path.join(threadTempFolder, 'summary.json'), reports);
+	jsonfile.writeFileSync(path.join(threadTempFolder, 'coverages.json'), allCoverages);
 
-		if (jammed && isChildProcess) {
-			return Promise.reject('jammed');
-		}
+	// print when not child process
+	!isChildProcess && print(env);
+	console.info((`Process[${processId}] finished`.bold as any).green);
+
+	if (jammed && isChildProcess) {
+		return Promise.reject('jammed');
 	}
 };

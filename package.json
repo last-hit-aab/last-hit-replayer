@@ -1,6 +1,6 @@
 {
 	"name": "last-hit-replayer",
-	"version": "0.9.12",
+	"version": "0.9.13-dev.1",
 	"description": "Replayer for last-hit recorded data.",
 	"main": "dist/index.js",
 	"types": "index",
@@ -41,6 +41,7 @@
 		"@types/uuid": "^3.4.6",
 		"@types/yargs": "^13.0.3",
 		"atob": "^2.1.2",
+		"axios": "^0.19.2",
 		"clone": "^2.1.2",
 		"colors": "^1.4.0",
 		"cross-spawn": "^7.0.1",

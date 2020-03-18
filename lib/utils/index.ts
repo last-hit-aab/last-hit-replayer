@@ -82,3 +82,20 @@ export const findFlows = (env: Environment): FlowFile[] => {
 			return flows;
 		}, [] as FlowFile[]);
 };
+
+const defaultName = 'last-hit';
+let starts: { [key in string]: number } = {};
+export const startTime = (name: string = 'last-hit') => {
+	starts[defaultName] = new Date().getTime();
+};
+
+export const endTime = (name: string = 'last-hit') => {
+	const now = new Date().getTime();
+	const start = starts[name];
+	if (start) {
+		delete starts[name];
+		return now - start;
+	} else {
+		return 0;
+	}
+};

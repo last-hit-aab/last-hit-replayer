@@ -28,6 +28,7 @@ export type EnvironmentOptions = {
 	includes?: IncludingFilters;
 	parallel?: number;
 	child?: boolean;
+	adminUrl?: string;
 };
 export type FlowFile = { story: string; flow: string };
 
@@ -51,11 +52,14 @@ export type Summary = {
 		path: string;
 		csspath: string;
 		custompath?: string;
+		datapath?: string;
 		human: string;
 		type: string;
 	}>;
 	testLogs?: Array<{ title: string; passed: boolean; level?: number }>;
 	flowParams: FlowParameters;
+	/** flow is jammed, because of dependency failed */
+	jammed?: boolean;
 };
 
 export type Report = Summary & {

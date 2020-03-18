@@ -228,7 +228,7 @@ export const handleFlow = (flowFile: FlowFile, env: Environment): Promise<FlowRe
 	const logger = getLogger();
 	const { story: storyName, flow: flowName } = flowFile;
 	const flowKey = `${flowName}@${storyName}`;
-	const workspace = env.getWorkspace();
+	// const workspace = env.getWorkspace();
 
 	const timeLoggerStream = new stream.Transform();
 	let timeSpent;

@@ -6,8 +6,9 @@ import { CoverageEntry } from 'puppeteer';
 import Environment from '../config/env';
 import * as pti from '../pti';
 import { CoverageEntryRange, Coverages, Report } from '../types';
-import { shorternUrl } from '../utils';
+import { endTime, shorternUrl } from '../utils';
 import { generateReport } from './report-generator';
+import axios from 'axios';
 
 const binarySearch = (target: CoverageEntryRange, array: Array<CoverageEntryRange>): number => {
 	let firstIndex = 0;
@@ -70,8 +71,17 @@ export const print = (env: Environment): void => {
 		}
 	});
 	generateReport({ filename: 'report.html', results: reports });
+
+	const adminUrl = env.getAdminUrl();
+	if (adminUrl) {
+		const used = endTime('all-used');
+		axios.post(adminUrl, {
+			spent: used,
+			summary: reports
+		});
+	}
 	pti.write(allCoverageData);
-	spawnSync('nyc', ['report', '--reporter=html'], { stdio: 'inherit' });
+	spawnSync('nyc', [ 'report', '--reporter=html' ], { stdio: 'inherit' });
 
 	console.table(
 		reports.map(item => {

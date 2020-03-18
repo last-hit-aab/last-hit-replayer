@@ -5,8 +5,9 @@ import Environment from './lib/config/env';
 import { doOnMultipleProcesses, doOnSingleProcess } from './lib/handler';
 import { createReplayer } from './lib/replayer';
 import { FlowFile } from './lib/types';
-import { findFlows, getProcessId } from './lib/utils';
+import { findFlows, getProcessId, startTime } from './lib/utils';
 
+startTime('all-used');
 const run = () => {
 	const processId = getProcessId();
 	console.info((`Process[${processId}] started.`.bold as any).green);

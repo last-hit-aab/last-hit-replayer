@@ -73,7 +73,7 @@ export const doOnMultipleProcesses = async (flows: FlowFile[], env: Environment)
 						}
 
 						const filename = path.join(composeTempFolder, `compose-${uuidv4()}.json`);
-						const childConfig = env.exposeForSingleProcess({ includes: [flow] });
+						const childConfig = env.exposeForSingleProcess({ includes: [ flow ] });
 						((childConfig as unknown) as Config).env = childConfig.name;
 						delete childConfig.name;
 						jsonfile.writeFileSync(filename, childConfig);
@@ -85,7 +85,7 @@ export const doOnMultipleProcesses = async (flows: FlowFile[], env: Environment)
 								`--workspace=${env.getWorkspace()}`
 							],
 							{
-								stdio: ['ignore', 'inherit', 'inherit']
+								stdio: [ 'ignore', 'inherit', 'inherit' ]
 							}
 						);
 						const onMyselfExit = () => {
