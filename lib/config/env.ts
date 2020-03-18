@@ -21,7 +21,11 @@ class Environment {
 	private includes?: IncludingFilters;
 	private parallel?: number;
 	private child: boolean;
+
 	private adminUrl?: string;
+	private adminToken?: string;
+	private adminWorkspaceId?: string | number;
+	private adminTestPlanId?: string | number;
 
 	private wrappers: Wrapper[];
 
@@ -39,6 +43,9 @@ class Environment {
 		this.child = options.child || false;
 
 		this.adminUrl = options.adminUrl;
+		this.adminToken = options.adminToken;
+		this.adminWorkspaceId = options.adminWorkspaceId;
+		this.adminTestPlanId = options.adminTestPlanId;
 
 		this.wrappers = [ this.wrapUrl ];
 	}
@@ -144,6 +151,18 @@ class Environment {
 
 	getAdminUrl(): string | undefined {
 		return this.adminUrl;
+	}
+
+	getAdminToken(): string | undefined {
+		return this.adminToken;
+	}
+
+	getAdminWorkspaceId(): string | number | undefined {
+		return this.adminWorkspaceId;
+	}
+
+	getAdminTestPlanId(): string | number | undefined {
+		return this.adminTestPlanId;
 	}
 
 	private computeParallel(parallel: number = 1): number {

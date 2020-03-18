@@ -51,6 +51,7 @@ exports.doOnSingleProcess = handler_1.doOnSingleProcess;
 var replayer_1 = require("./lib/replayer");
 exports.createReplayer = replayer_1.createReplayer;
 var utils_1 = require("./lib/utils");
+utils_1.startTime('all-used');
 var run = function () {
     var processId = utils_1.getProcessId();
     console_1.default.info(("Process[" + processId + "] started.").bold.green);

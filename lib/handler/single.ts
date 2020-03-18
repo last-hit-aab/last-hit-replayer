@@ -114,7 +114,7 @@ export const doOnSingleProcess = async (flows: FlowFile[], env: Environment): Pr
 	jsonfile.writeFileSync(path.join(threadTempFolder, 'coverages.json'), allCoverages);
 
 	// print when not child process
-	!isChildProcess && print(env);
+	!isChildProcess && await print(env);
 	console.info((`Process[${processId}] finished`.bold as any).green);
 
 	if (jammed && isChildProcess) {

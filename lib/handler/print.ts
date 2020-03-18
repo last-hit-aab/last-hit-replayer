@@ -31,7 +31,7 @@ const binarySearch = (target: CoverageEntryRange, array: Array<CoverageEntryRang
 	return 0 - middleIndex;
 };
 
-export const print = (env: Environment): void => {
+export const print = async (env: Environment): Promise<void> => {
 	const reports: Array<Report> = [];
 	const coverageMap = {};
 	const allCoverageData: Coverages = [];
@@ -73,12 +73,21 @@ export const print = (env: Environment): void => {
 	generateReport({ filename: 'report.html', results: reports });
 
 	const adminUrl = env.getAdminUrl();
+	console.log(adminUrl);
 	if (adminUrl) {
 		const used = endTime('all-used');
-		axios.post(adminUrl, {
+		const response = await axios.post(adminUrl, {
 			spent: used,
-			summary: reports
+			summary: reports,
+			testPlan: {
+				id: env.getAdminTestPlanId()
+			}
+		}, {
+			headers: {
+				authorization: env.getAdminToken()
+			}
 		});
+		console.log(response);
 	}
 	pti.write(allCoverageData);
 	spawnSync('nyc', [ 'report', '--reporter=html' ], { stdio: 'inherit' });

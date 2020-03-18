@@ -19,6 +19,10 @@ var Environment = /** @class */ (function () {
         this.includes = options.includes;
         this.parallel = this.computeParallel(options.parallel);
         this.child = options.child || false;
+        this.adminUrl = options.adminUrl;
+        this.adminToken = options.adminToken;
+        this.adminWorkspaceId = options.adminWorkspaceId;
+        this.adminTestPlanId = options.adminTestPlanId;
         this.wrappers = [this.wrapUrl];
     }
     Environment.prototype.getOriginalOptions = function () {
@@ -42,7 +46,13 @@ var Environment = /** @class */ (function () {
         this.sleepAfterChange = options.sleepAfterChange || this.sleepAfterChange;
         this.slowAjaxTime = options.slowAjaxTime || this.slowAjaxTime;
         // set original options
-        ['name', 'urlReplaceRegexp', 'urlReplaceTo', 'sleepAfterChange', 'slowAjaxTime'].forEach(function (prop) { return (_this.originalOptions[prop] = options[prop]); });
+        [
+            'name',
+            'urlReplaceRegexp', 'urlReplaceTo',
+            'sleepAfterChange', 'slowAjaxTime',
+            'parallel',
+            'adminUrl'
+        ].forEach(function (prop) { return (_this.originalOptions[prop] = options[prop]); });
     };
     Environment.prototype.wrap = function (step) {
         var _this = this;
@@ -98,6 +108,18 @@ var Environment = /** @class */ (function () {
     };
     Environment.prototype.isOnParallel = function () {
         return this.getParallel() !== 1;
+    };
+    Environment.prototype.getAdminUrl = function () {
+        return this.adminUrl;
+    };
+    Environment.prototype.getAdminToken = function () {
+        return this.adminToken;
+    };
+    Environment.prototype.getAdminWorkspaceId = function () {
+        return this.adminWorkspaceId;
+    };
+    Environment.prototype.getAdminTestPlanId = function () {
+        return this.adminTestPlanId;
     };
     Environment.prototype.computeParallel = function (parallel) {
         if (parallel === void 0) { parallel = 1; }

@@ -28,11 +28,15 @@ export type EnvironmentOptions = {
 	includes?: IncludingFilters;
 	parallel?: number;
 	child?: boolean;
+	// for push replay summary to admin server
 	adminUrl?: string;
+	adminToken?: string;
+	adminWorkspaceId?: string | number;
+	adminTestPlanId?: string | number;
 };
 export type FlowFile = { story: string; flow: string };
 
-export type SlowAjax = {};
+export type SlowAjax = { url: string; time: number; };
 export type Summary = {
 	numberOfFailed: number;
 	storyName: string;

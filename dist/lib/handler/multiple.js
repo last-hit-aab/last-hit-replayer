@@ -83,10 +83,17 @@ exports.doOnMultipleProcesses = function (flows, env) { return __awaiter(void 0,
         switch (_a.label) {
             case 0:
                 resolves = [];
-                Promise.all(flows.map(function () { return new Promise(function (resolve) { return resolves.push(resolve); }); })).finally(function () {
-                    print_1.print(env);
-                    console.info(("Process[" + processId + "] finished").bold.green);
-                });
+                Promise.all(flows.map(function () { return new Promise(function (resolve) { return resolves.push(resolve); }); })).finally(function () { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, print_1.print(env)];
+                            case 1:
+                                _a.sent();
+                                console.info(("Process[" + processId + "] finished").bold.green);
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
                 composeTempFolder = createTemporaryFolders(env).composeTempFolder;
                 childProcessCount = 0;
                 buildActions = function (flows) {

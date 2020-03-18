@@ -239,7 +239,7 @@ exports.handleFlow = function (flowFile, env) {
     var logger = utils_1.getLogger();
     var storyName = flowFile.story, flowName = flowFile.flow;
     var flowKey = flowName + "@" + storyName;
-    var workspace = env.getWorkspace();
+    // const workspace = env.getWorkspace();
     var timeLoggerStream = new stream_1.default.Transform();
     var timeSpent;
     timeLoggerStream._transform = function (chunk, encoding, done) {

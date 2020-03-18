@@ -88,19 +88,19 @@ var createTemporaryFolders = function (env) { return __awaiter(void 0, void 0, v
     });
 }); };
 exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, void 0, void 0, function () {
-    var threadTempFolder, jammed, logger, reports, allCoverages, pendingFlows_1, run, countLeft, flows_1, isChildProcess;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var threadTempFolder, jammed, logger, reports, allCoverages, pendingFlows_1, run, countLeft, flows_1, _a, isChildProcess, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
             case 0: return [4 /*yield*/, createTemporaryFolders(env)];
             case 1:
-                threadTempFolder = (_a.sent()).threadTempFolder;
+                threadTempFolder = (_c.sent()).threadTempFolder;
                 jammed = false;
                 logger = utils_1.getLogger();
                 reports = [];
                 allCoverages = [];
-                _a.label = 2;
+                _c.label = 2;
             case 2:
-                _a.trys.push([2, , 6, 7]);
+                _c.trys.push([2, 6, , 7]);
                 pendingFlows_1 = flows;
                 run = function (flows) { return __awaiter(void 0, void 0, void 0, function () {
                     return __generator(this, function (_a) {
@@ -114,7 +114,7 @@ exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, voi
                                                 _b.sent();
                                                 _b.label = 2;
                                             case 2:
-                                                _b.trys.push([2, 4, 5, 6]);
+                                                _b.trys.push([2, 4, , 5]);
                                                 return [4 /*yield*/, single_flow_1.handleFlow(flow, env)];
                                             case 3:
                                                 _a = _b.sent(), report = _a.report, coverages = _a.coverages, code = _a.code;
@@ -125,15 +125,12 @@ exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, voi
                                                     reports.push(report);
                                                     allCoverages.push.apply(allCoverages, coverages);
                                                 }
-                                                return [3 /*break*/, 6];
+                                                return [3 /*break*/, 5];
                                             case 4:
                                                 e_1 = _b.sent();
                                                 logger.error(e_1);
-                                                return [3 /*break*/, 6];
-                                            case 5: 
-                                            // do nothing
-                                            return [2 /*return*/, Promise.resolve()];
-                                            case 6: return [2 /*return*/];
+                                                return [3 /*break*/, 5];
+                                            case 5: return [2 /*return*/, Promise.resolve()];
                                         }
                                     });
                                 }); }, Promise.resolve())];
@@ -144,17 +141,34 @@ exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, voi
                     });
                 }); };
                 countLeft = pendingFlows_1.length;
-                _a.label = 3;
+                _c.label = 3;
             case 3:
                 if (!(pendingFlows_1.length !== 0)) return [3 /*break*/, 5];
                 flows_1 = __spreadArrays(pendingFlows_1);
                 pendingFlows_1.length = 0;
                 return [4 /*yield*/, run(flows_1)];
             case 4:
-                _a.sent();
+                _c.sent();
                 if (countLeft === pendingFlows_1.length) {
                     // nothing can be run
                     jammed = true;
+                    reports.push.apply(reports, pendingFlows_1.map(function (flowFile) {
+                        var flowContent = env.readFlowFile(flowFile.story, flowFile.flow);
+                        return {
+                            storyName: flowFile.story,
+                            flowName: flowFile.flow,
+                            numberOfStep: (flowContent.steps || []).length,
+                            numberOfUIBehavior: 0,
+                            numberOfSuccess: 0,
+                            numberOfAjax: 0,
+                            numberOfAssert: 0,
+                            numberOfFailed: 0,
+                            errorStack: '',
+                            flowParams: (flowContent.params || []).filter(function (param) { return param.type === 'both' || param.type === 'in'; }),
+                            jammed: true,
+                            spent: flowFile.flow + "@" + flowFile.story + ": 0ms\n"
+                        };
+                    }));
                     return [3 /*break*/, 5];
                 }
                 else {
@@ -163,17 +177,29 @@ exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, voi
                 return [3 /*break*/, 3];
             case 5: return [3 /*break*/, 7];
             case 6:
+                _a = _c.sent();
+                return [3 /*break*/, 7];
+            case 7:
                 isChildProcess = env.isOnChildProcess();
                 jsonfile_1.default.writeFileSync(path_1.default.join(threadTempFolder, 'summary.json'), reports);
                 jsonfile_1.default.writeFileSync(path_1.default.join(threadTempFolder, 'coverages.json'), allCoverages);
                 // print when not child process
-                !isChildProcess && print_1.print(env);
+                _b = !isChildProcess;
+                if (!_b) 
+                // print when not child process
+                return [3 /*break*/, 9];
+                return [4 /*yield*/, print_1.print(env)];
+            case 8:
+                _b = (_c.sent());
+                _c.label = 9;
+            case 9:
+                // print when not child process
+                _b;
                 console.info(("Process[" + processId + "] finished").bold.green);
                 if (jammed && isChildProcess) {
                     return [2 /*return*/, Promise.reject('jammed')];
                 }
-                return [7 /*endfinally*/];
-            case 7: return [2 /*return*/];
+                return [2 /*return*/];
         }
     });
 }); };

@@ -81,6 +81,7 @@ var readConfigFile = function (workspace) {
     if (envName) {
         config.env = envName;
     }
+    Object.keys(yargs_1.argv).filter(function (name) { return name.startsWith('settings-'); }).forEach(function (name) { return config[name] = yargs_1.argv[name]; });
     return config;
 };
 var readWorkspaceFile = function (workspace) { return __awaiter(void 0, void 0, void 0, function () {

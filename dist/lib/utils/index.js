@@ -80,5 +80,23 @@ exports.findFlows = function (env) {
         return flows;
     }, []);
 };
+var defaultName = 'last-hit';
+var starts = {};
+exports.startTime = function (name) {
+    if (name === void 0) { name = 'last-hit'; }
+    starts[defaultName] = new Date().getTime();
+};
+exports.endTime = function (name) {
+    if (name === void 0) { name = 'last-hit'; }
+    var now = new Date().getTime();
+    var start = starts[name];
+    if (start) {
+        delete starts[name];
+        return now - start;
+    }
+    else {
+        return 0;
+    }
+};
 
 //# sourceMappingURL=index.js.map

@@ -73,6 +73,7 @@ var ReplaySummary = /** @class */ (function () {
             path: step.path,
             csspath: step.csspath,
             custompath: step.custompath,
+            datapath: step.datapath,
             human: step.human,
             type: step.type
         });

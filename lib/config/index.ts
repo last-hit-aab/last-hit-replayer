@@ -47,6 +47,8 @@ const readConfigFile = (workspace: string): Config => {
 	if (envName) {
 		config.env = envName;
 	}
+
+	Object.keys(args).filter(name => name.startsWith('settings-')).forEach(name => config[name] = args[name]);
 	return config;
 };
 
