@@ -54,33 +54,7 @@ export const generateKeyByObject = (story: Story, flow: Flow): string =>
 export const generateKeyByString = (storyName: string, flowName: string): string =>
 	`[${flowName}@${storyName}]`;
 
-/**
- * build flows array of given workspace
- */
-export const findFlows = (env: Environment): FlowFile[] => {
-	const workspace = env.getWorkspace();
-	const flows = fs
-		.readdirSync(workspace)
-		.filter(dir => fs.statSync(path.join(workspace, dir)).isDirectory())
-		.filter(dir => ![ '.scripts' ].includes(dir))
-		.map(storyName => {
-			return fs
-				.readdirSync(path.join(workspace, storyName))
-				.filter(flowFilename =>
-					fs.statSync(path.join(workspace, storyName, flowFilename)).isFile()
-				)
-				.filter(flowFilename => flowFilename.endsWith('.flow.json'))
-				.map(flowFilename => flowFilename.replace(/^(.*)\.flow\.json$/, '$1'))
-				.filter(
-					flowName =>
-						env.isIncluded(storyName, flowName) && !env.isExcluded(storyName, flowName)
-				)
-				.map(flowName => ({ story: storyName, flow: flowName }));
-		})
-		.reduce((flows, array) => {
-			flows.push(...array);
-			return flows;
-		}, [] as FlowFile[]);
+const checkNecessary = (flows: Array<FlowFile>, env: Environment): Array<FlowFile> => {
 	const flowMap: { [key in string]: FlowFile } = {};
 	const necessaryFlows = flows.map(flowFile => {
 		flowMap[generateKeyByString(flowFile.story, flowFile.flow)] = flowFile;
@@ -114,6 +88,44 @@ export const findFlows = (env: Environment): FlowFile[] => {
 		return necessary;
 	}, [] as FlowFile[]);
 	return [ ...necessaryFlows, ...flows ];
+};
+/**
+ * build flows array of given workspace
+ */
+export const findFlows = (env: Environment): Array<FlowFile> => {
+	const workspace = env.getWorkspace();
+	const flows = fs
+		.readdirSync(workspace)
+		.filter(dir => fs.statSync(path.join(workspace, dir)).isDirectory())
+		.filter(dir => ![ '.scripts' ].includes(dir))
+		.map(storyName => {
+			return fs
+				.readdirSync(path.join(workspace, storyName))
+				.filter(flowFilename =>
+					fs.statSync(path.join(workspace, storyName, flowFilename)).isFile()
+				)
+				.filter(flowFilename => flowFilename.endsWith('.flow.json'))
+				.map(flowFilename => flowFilename.replace(/^(.*)\.flow\.json$/, '$1'))
+				.filter(
+					flowName =>
+						env.isIncluded(storyName, flowName) && !env.isExcluded(storyName, flowName)
+				)
+				.map(flowName => ({ story: storyName, flow: flowName }));
+		})
+		.reduce((flows, array) => {
+			flows.push(...array);
+			return flows;
+		}, [] as FlowFile[]);
+
+	let necessaryFlows = checkNecessary(flows, env);
+	while (true) {
+		const nextRound = checkNecessary(necessaryFlows, env);
+		if (nextRound.length === necessaryFlows.length) {
+			break;
+		}
+		necessaryFlows = nextRound;
+	}
+	return necessaryFlows;
 };
 
 const defaultName = 'last-hit';

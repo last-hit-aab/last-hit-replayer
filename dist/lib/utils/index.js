@@ -60,32 +60,7 @@ exports.generateKeyByObject = function (story, flow) {
 exports.generateKeyByString = function (storyName, flowName) {
     return "[" + flowName + "@" + storyName + "]";
 };
-/**
- * build flows array of given workspace
- */
-exports.findFlows = function (env) {
-    var workspace = env.getWorkspace();
-    var flows = fs_1.default
-        .readdirSync(workspace)
-        .filter(function (dir) { return fs_1.default.statSync(path_1.default.join(workspace, dir)).isDirectory(); })
-        .filter(function (dir) { return !['.scripts'].includes(dir); })
-        .map(function (storyName) {
-        return fs_1.default
-            .readdirSync(path_1.default.join(workspace, storyName))
-            .filter(function (flowFilename) {
-            return fs_1.default.statSync(path_1.default.join(workspace, storyName, flowFilename)).isFile();
-        })
-            .filter(function (flowFilename) { return flowFilename.endsWith('.flow.json'); })
-            .map(function (flowFilename) { return flowFilename.replace(/^(.*)\.flow\.json$/, '$1'); })
-            .filter(function (flowName) {
-            return env.isIncluded(storyName, flowName) && !env.isExcluded(storyName, flowName);
-        })
-            .map(function (flowName) { return ({ story: storyName, flow: flowName }); });
-    })
-        .reduce(function (flows, array) {
-        flows.push.apply(flows, array);
-        return flows;
-    }, []);
+var checkNecessary = function (flows, env) {
     var flowMap = {};
     var necessaryFlows = flows.map(function (flowFile) {
         flowMap[exports.generateKeyByString(flowFile.story, flowFile.flow)] = flowFile;
@@ -118,6 +93,42 @@ exports.findFlows = function (env) {
         return necessary;
     }, []);
     return __spreadArrays(necessaryFlows, flows);
+};
+/**
+ * build flows array of given workspace
+ */
+exports.findFlows = function (env) {
+    var workspace = env.getWorkspace();
+    var flows = fs_1.default
+        .readdirSync(workspace)
+        .filter(function (dir) { return fs_1.default.statSync(path_1.default.join(workspace, dir)).isDirectory(); })
+        .filter(function (dir) { return !['.scripts'].includes(dir); })
+        .map(function (storyName) {
+        return fs_1.default
+            .readdirSync(path_1.default.join(workspace, storyName))
+            .filter(function (flowFilename) {
+            return fs_1.default.statSync(path_1.default.join(workspace, storyName, flowFilename)).isFile();
+        })
+            .filter(function (flowFilename) { return flowFilename.endsWith('.flow.json'); })
+            .map(function (flowFilename) { return flowFilename.replace(/^(.*)\.flow\.json$/, '$1'); })
+            .filter(function (flowName) {
+            return env.isIncluded(storyName, flowName) && !env.isExcluded(storyName, flowName);
+        })
+            .map(function (flowName) { return ({ story: storyName, flow: flowName }); });
+    })
+        .reduce(function (flows, array) {
+        flows.push.apply(flows, array);
+        return flows;
+    }, []);
+    var necessaryFlows = checkNecessary(flows, env);
+    while (true) {
+        var nextRound = checkNecessary(necessaryFlows, env);
+        if (nextRound.length === necessaryFlows.length) {
+            break;
+        }
+        necessaryFlows = nextRound;
+    }
+    return necessaryFlows;
 };
 var defaultName = 'last-hit';
 var starts = {};
