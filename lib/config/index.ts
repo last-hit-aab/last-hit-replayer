@@ -2,7 +2,7 @@ import fs from 'fs';
 import jsonfile from 'jsonfile';
 import path from 'path';
 import { argv as args } from 'yargs';
-import { Config, EnvironmentOptions, WorkspaceConfig } from '../types';
+import { Config, ConfigForAdminKeys, ConfigForRuntimeKey, EnvironmentOptions, WorkspaceConfig } from '../types';
 import { getProcessId } from '../utils';
 import Environment from './env';
 
@@ -92,11 +92,21 @@ const buildEnvironment = async (
 		}
 	} else {
 		env = Environment.exposeNoop();
+		ConfigForRuntimeKey.forEach(prop => {
+			if (config[prop] != null) {
+				env[prop] = config[prop];
+			}
+		});
 	}
 	env.workspace = config.workspace;
 	env.includes = config.includes;
 	env.child = config.child;
-	env.parallel = args.parallel as number;
+	env.parallel = (args.parallel || config.parallel) as number;
+	ConfigForAdminKeys.forEach(prop => {
+		if (config[prop] != null) {
+			env[prop] = config[prop];
+		}
+	});
 
 	// settings are appointed via cli, has highest priority
 	const settings = Object.keys(config)

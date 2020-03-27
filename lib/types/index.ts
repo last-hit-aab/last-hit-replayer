@@ -3,7 +3,22 @@ import { FlowParameters } from 'last-hit-types';
 
 export type IncludingFilter = { story: string; flow?: string };
 export type IncludingFilters = IncludingFilter[];
-export type Config = {
+// for push replay summary to admin server
+export const ConfigForAdminKeys = [ 'adminUrl', 'adminToken', 'adminWorkspaceId', 'adminTestPlanId' ];
+export type ConfigForAdmin = {
+	adminUrl?: string;
+	adminToken?: string;
+	adminWorkspaceId?: string | number;
+	adminTestPlanId?: string | number;
+}
+export const ConfigForRuntimeKey = [ 'urlReplaceRegexp', 'urlReplaceTo', 'sleepAfterChange', 'slowAjaxTime' ];
+export type ConfigForRuntime = {
+	urlReplaceRegexp?: string;
+	urlReplaceTo?: string;
+	sleepAfterChange?: number;
+	slowAjaxTime?: number;
+}
+export type Config = ConfigForAdmin & ConfigForRuntime & {
 	[key in string]: any;
 } & {
 	/** environment name */
@@ -12,6 +27,7 @@ export type Config = {
 	workspace: string;
 	/** including */
 	includes?: IncludingFilters;
+	parallel?: number;
 	/** is in child process */
 	child?: boolean;
 };

@@ -43,6 +43,7 @@ var fs_1 = __importDefault(require("fs"));
 var jsonfile_1 = __importDefault(require("jsonfile"));
 var path_1 = __importDefault(require("path"));
 var yargs_1 = require("yargs");
+var types_1 = require("../types");
 var utils_1 = require("../utils");
 var env_1 = __importDefault(require("./env"));
 var processId = utils_1.getProcessId();
@@ -122,11 +123,21 @@ var buildEnvironment = function (config, workspaceConfig) { return __awaiter(voi
         }
         else {
             env = env_1.default.exposeNoop();
+            types_1.ConfigForRuntimeKey.forEach(function (prop) {
+                if (config[prop] != null) {
+                    env[prop] = config[prop];
+                }
+            });
         }
         env.workspace = config.workspace;
         env.includes = config.includes;
         env.child = config.child;
-        env.parallel = yargs_1.argv.parallel;
+        env.parallel = (yargs_1.argv.parallel || config.parallel);
+        types_1.ConfigForAdminKeys.forEach(function (prop) {
+            if (config[prop] != null) {
+                env[prop] = config[prop];
+            }
+        });
         settings = Object.keys(config)
             .filter(function (key) { return key.startsWith('settings-'); })
             .reduce(function (all, key) {
