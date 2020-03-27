@@ -156,6 +156,9 @@ const installListenersOnPage = async (page: Page) => {
 
 export const controlPage = async (replayer: Replayer, page: Page, device: Device, uuid: string) => {
 	await installListenersOnPage(page);
+	if (device.wechat && (device.userAgent || '').indexOf('MicroMessenger') !== -1) {
+		device.userAgent = `${device.userAgent} MicroMessenger/6.5.7`;
+	}
 	await page.emulate(device);
 	await page.emulateMedia('screen');
 	const setBackground = () =>
