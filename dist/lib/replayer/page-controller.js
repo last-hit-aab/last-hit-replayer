@@ -204,7 +204,7 @@ exports.controlPage = function (replayer, page, device, uuid) { return __awaiter
             case 0: return [4 /*yield*/, installListenersOnPage(page)];
             case 1:
                 _a.sent();
-                if (device.wechat && (device.userAgent || '').indexOf('MicroMessenger') !== -1) {
+                if (device.wechat && (device.userAgent || '').indexOf('MicroMessenger') === -1) {
                     device.userAgent = device.userAgent + " MicroMessenger/6.5.7";
                 }
                 return [4 /*yield*/, page.emulate(device)];
