@@ -1151,9 +1151,9 @@ class Replayer {
 	private async findElement(step: Step, page: Page): Promise<ElementHandle> {
 		const dataPath = step.datapath;
 		if (dataPath) {
-			const count = await page.evaluate(dataPath => document.querySelectorAll(`[${dataPath}]`).length, dataPath);
+			const count = await page.evaluate(dataPath => document.querySelectorAll(dataPath).length, dataPath);
 			if (count === 1) {
-				const element = await page.$(`[${dataPath}]`);
+				const element = await page.$(dataPath);
 				if (element) {
 					return element;
 				}
