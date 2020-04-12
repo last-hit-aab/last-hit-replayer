@@ -77,6 +77,26 @@ var binarySearch = function (target, array) {
     }
     return 0 - middleIndex;
 };
+var buildBody = function (used, reports, env) {
+    if (env.getAdminTestPlanId()) {
+        return {
+            spent: used,
+            summary: reports,
+            testPlan: {
+                id: env.getAdminTestPlanId(),
+            },
+        };
+    }
+    else {
+        return {
+            spent: used,
+            summary: reports,
+            workspace: {
+                id: env.getAdminWorkspaceId(),
+            },
+        };
+    }
+};
 exports.print = function (env) { return __awaiter(void 0, void 0, void 0, function () {
     var reports, coverageMap, allCoverageData, workspace, resultTempFolder, adminUrl, used, response, e_1;
     return __generator(this, function (_a) {
@@ -86,12 +106,12 @@ exports.print = function (env) { return __awaiter(void 0, void 0, void 0, functi
                 coverageMap = {};
                 allCoverageData = [];
                 workspace = env.getWorkspace();
-                resultTempFolder = path_1.default.join(workspace, '.result-temp');
+                resultTempFolder = path_1.default.join(workspace, ".result-temp");
                 (fs_1.default.readdirSync(resultTempFolder) || []).forEach(function (threadFolder) {
-                    var summaryFilename = path_1.default.join(path_1.default.join(resultTempFolder, threadFolder, 'summary.json'));
+                    var summaryFilename = path_1.default.join(path_1.default.join(resultTempFolder, threadFolder, "summary.json"));
                     var report = jsonfile_1.default.readFileSync(summaryFilename);
                     (report || []).forEach(function (item) { return reports.push(item); });
-                    var coverageFilename = path_1.default.join(path_1.default.join(resultTempFolder, threadFolder, 'coverages.json'));
+                    var coverageFilename = path_1.default.join(path_1.default.join(resultTempFolder, threadFolder, "coverages.json"));
                     if (fs_1.default.existsSync(coverageFilename)) {
                         var coverageData = jsonfile_1.default.readFileSync(coverageFilename);
                         coverageData.reduce(function (map, item) {
@@ -115,63 +135,57 @@ exports.print = function (env) { return __awaiter(void 0, void 0, void 0, functi
                         }, coverageMap);
                     }
                 });
-                report_generator_1.generateReport({ filename: 'report.html', results: reports });
                 adminUrl = env.getAdminUrl();
+                console.log("adminUrl", { adminUrl: adminUrl });
                 if (!adminUrl) return [3 /*break*/, 4];
-                used = utils_1.endTime('all-used');
+                used = utils_1.endTime("all-used");
                 _a.label = 1;
             case 1:
                 _a.trys.push([1, 3, , 4]);
-                return [4 /*yield*/, axios_1.default.post(adminUrl, {
-                        spent: used,
-                        summary: reports,
-                        testPlan: {
-                            id: env.getAdminTestPlanId()
-                        }
-                    }, {
+                return [4 /*yield*/, axios_1.default.post(adminUrl, buildBody(used, reports, env), {
                         headers: {
-                            authorization: env.getAdminToken()
-                        }
+                            authorization: env.getAdminToken(),
+                        },
                     })];
             case 2:
                 response = _a.sent();
+                console.log(response.status);
                 return [3 /*break*/, 4];
             case 3:
                 e_1 = _a.sent();
-                console.error('failed to push summary to admin server');
+                console.error("failed to push summary to admin server");
                 console.error(e_1);
                 return [3 /*break*/, 4];
             case 4:
+                report_generator_1.generateReport({ filename: "report.html", results: reports });
                 pti.write(allCoverageData);
-                child_process_1.spawnSync('nyc', ['report', '--reporter=html'], { stdio: 'inherit' });
+                child_process_1.spawnSync("nyc", ["report", "--reporter=html"], { stdio: "inherit" });
                 console.table(reports.map(function (item) {
                     return {
                         Story: item.storyName,
                         Flow: item.flowName,
                         Steps: item.numberOfStep,
-                        'UI Behavior': item.numberOfUIBehavior,
+                        "UI Behavior": item.numberOfUIBehavior,
                         Passed: item.numberOfSuccess,
                         Failed: item.numberOfFailed,
-                        'Ignored Errors': (item.ignoreErrorList || []).length,
-                        'Ajax calls': item.numberOfAjax,
-                        'Slow ajax calls': (item.slowAjaxRequest || []).length,
-                        'Spent (ms)': Math.round((item.spent || '').split(' ')[1].split('ms')[0]),
-                        'Pass Rate(%)': ((item.numberOfSuccess / item.numberOfStep) * 100)
-                            .toFixed(2)
-                            .toString()
+                        "Ignored Errors": (item.ignoreErrorList || []).length,
+                        "Ajax calls": item.numberOfAjax,
+                        "Slow ajax calls": (item.slowAjaxRequest || []).length,
+                        "Spent (ms)": Math.round((item.spent || "").split(" ")[1].split("ms")[0]),
+                        "Pass Rate(%)": ((item.numberOfSuccess / item.numberOfStep) * 100).toFixed(2).toString(),
                     };
                 }), [
-                    'Story',
-                    'Flow',
-                    'Steps',
-                    'UI Behavior',
-                    'Passed',
-                    'Failed',
-                    'Ignored Errors',
-                    'Ajax calls',
-                    'Slow ajax calls',
-                    'Spent (ms)',
-                    'Pass Rate(%)'
+                    "Story",
+                    "Flow",
+                    "Steps",
+                    "UI Behavior",
+                    "Passed",
+                    "Failed",
+                    "Ignored Errors",
+                    "Ajax calls",
+                    "Slow ajax calls",
+                    "Spent (ms)",
+                    "Pass Rate(%)",
                 ]);
                 return [2 /*return*/];
         }
