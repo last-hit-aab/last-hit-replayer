@@ -1424,79 +1424,123 @@ var Replayer = /** @class */ (function () {
             logger: this.getLogger()
         });
     };
-    Replayer.prototype.findElement = function (step, page) {
+    Replayer.prototype.findElementByCssPath = function (target, path) {
         return __awaiter(this, void 0, void 0, function () {
-            var dataPath, count, element, xpath, elements, cssPath, count, element, customPath, count, element, frames, index, frame, element, paths;
+            var count, element;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        dataPath = step.datapath;
-                        if (!dataPath) return [3 /*break*/, 3];
-                        return [4 /*yield*/, page.evaluate(function (dataPath) { return document.querySelectorAll(dataPath).length; }, dataPath)];
+                        if (!path || !target) {
+                            return [2 /*return*/, null];
+                        }
+                        return [4 /*yield*/, target.evaluate(function (path) { return document.querySelectorAll(path).length; }, path)];
                     case 1:
                         count = _a.sent();
                         if (!(count === 1)) return [3 /*break*/, 3];
-                        return [4 /*yield*/, page.$(dataPath)];
+                        return [4 /*yield*/, target.$(path)];
                     case 2:
                         element = _a.sent();
                         if (element) {
                             return [2 /*return*/, element];
                         }
                         _a.label = 3;
-                    case 3:
+                    case 3: return [2 /*return*/, null];
+                }
+            });
+        });
+    };
+    Replayer.prototype.findElement = function (step, page) {
+        return __awaiter(this, void 0, void 0, function () {
+            var dataPath, element, xpath, elements, cssPath, element, customPath, element, frames, index, frame, elementInFrame, elementsInFrame, elementInFrame, elementInFrame, paths;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        dataPath = step.datapath;
+                        if (!dataPath) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.findElementByCssPath(page, dataPath)];
+                    case 1:
+                        element = _a.sent();
+                        if (element != null) {
+                            return [2 /*return*/, element];
+                        }
+                        _a.label = 2;
+                    case 2:
                         xpath = this.transformStepPathToXPath(step.path);
+                        if (!xpath) return [3 /*break*/, 4];
                         return [4 /*yield*/, page.$x(xpath)];
-                    case 4:
+                    case 3:
                         elements = _a.sent();
                         if (elements && elements.length === 1) {
                             return [2 /*return*/, elements[0]];
                         }
+                        _a.label = 4;
+                    case 4:
                         cssPath = step.csspath;
-                        if (!cssPath) return [3 /*break*/, 7];
-                        return [4 /*yield*/, page.evaluate(function (cssPath) { return document.querySelectorAll(cssPath).length; }, cssPath)];
+                        if (!cssPath) return [3 /*break*/, 6];
+                        return [4 /*yield*/, this.findElementByCssPath(page, cssPath)];
                     case 5:
-                        count = _a.sent();
-                        if (!(count === 1)) return [3 /*break*/, 7];
-                        return [4 /*yield*/, page.$(cssPath)];
+                        element = _a.sent();
+                        if (element != null) {
+                            return [2 /*return*/, element];
+                        }
+                        _a.label = 6;
                     case 6:
-                        element = _a.sent();
-                        if (element) {
-                            return [2 /*return*/, element];
-                        }
-                        _a.label = 7;
-                    case 7:
                         customPath = step.custompath;
-                        if (!customPath) return [3 /*break*/, 10];
-                        return [4 /*yield*/, page.evaluate(function (customPath) { return document.querySelectorAll(customPath).length; }, customPath)];
-                    case 8:
-                        count = _a.sent();
-                        if (!(count === 1)) return [3 /*break*/, 10];
-                        return [4 /*yield*/, page.$(customPath)];
-                    case 9:
+                        if (!customPath) return [3 /*break*/, 8];
+                        return [4 /*yield*/, this.findElementByCssPath(page, customPath)];
+                    case 7:
                         element = _a.sent();
-                        if (element) {
+                        if (element != null) {
                             return [2 /*return*/, element];
                         }
-                        _a.label = 10;
-                    case 10:
+                        _a.label = 8;
+                    case 8:
                         frames = page.frames();
-                        if (!(frames.length > 0)) return [3 /*break*/, 14];
+                        if (!(frames.length > 0)) return [3 /*break*/, 18];
                         index = 0;
+                        _a.label = 9;
+                    case 9:
+                        if (!(index < frames.length)) return [3 /*break*/, 18];
+                        frame = frames[index];
+                        if (!dataPath) return [3 /*break*/, 11];
+                        return [4 /*yield*/, this.findElementByCssPath(frame, dataPath)];
+                    case 10:
+                        elementInFrame = _a.sent();
+                        if (elementInFrame != null) {
+                            return [2 /*return*/, elementInFrame];
+                        }
                         _a.label = 11;
                     case 11:
-                        if (!(index < frames.length)) return [3 /*break*/, 14];
-                        frame = frames[index];
+                        if (!xpath) return [3 /*break*/, 13];
                         return [4 /*yield*/, frame.$x(xpath)];
                     case 12:
-                        element = _a.sent();
-                        if (element.length === 1) {
-                            return [2 /*return*/, element[0]];
+                        elementsInFrame = _a.sent();
+                        if (elementsInFrame && elementsInFrame.length === 1) {
+                            return [2 /*return*/, elementsInFrame[0]];
                         }
                         _a.label = 13;
                     case 13:
-                        index++;
-                        return [3 /*break*/, 11];
+                        if (!cssPath) return [3 /*break*/, 15];
+                        return [4 /*yield*/, this.findElementByCssPath(frame, cssPath)];
                     case 14:
+                        elementInFrame = _a.sent();
+                        if (elementInFrame != null) {
+                            return [2 /*return*/, elementInFrame];
+                        }
+                        _a.label = 15;
+                    case 15:
+                        if (!customPath) return [3 /*break*/, 17];
+                        return [4 /*yield*/, this.findElementByCssPath(frame, customPath)];
+                    case 16:
+                        elementInFrame = _a.sent();
+                        if (elementInFrame != null) {
+                            return [2 /*return*/, elementInFrame];
+                        }
+                        _a.label = 17;
+                    case 17:
+                        index++;
+                        return [3 /*break*/, 9];
+                    case 18:
                         paths = (function () {
                             var paths = { xpath: xpath, csspath: cssPath, custompath: customPath, datapath: dataPath };
                             return Object.keys(paths)

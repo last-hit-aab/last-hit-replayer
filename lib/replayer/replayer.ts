@@ -34,7 +34,7 @@ import {
 	WorkspaceExtensions
 } from 'last-hit-types';
 import path from 'path';
-import puppeteer, { Browser, CoverageEntry, ElementHandle, Page, Request } from 'puppeteer';
+import puppeteer, { Browser, CoverageEntry, ElementHandle, Frame, Page, Request } from 'puppeteer';
 import util from 'util';
 import uuidv4 from 'uuid/v4';
 import ThirdStepSupport, {
@@ -1148,44 +1148,53 @@ class Replayer {
 		});
 	}
 
+	private async findElementByCssPath(target: Page | Frame, path: string): Promise<ElementHandle | null> {
+		if (!path || !target) {
+			return null;
+		}
+
+		const count = await target.evaluate(path => document.querySelectorAll(path).length, path);
+		if (count === 1) {
+			const element = await target.$(path);
+			if (element) {
+				return element;
+			}
+		}
+
+		return null;
+	}
+
 	private async findElement(step: Step, page: Page): Promise<ElementHandle> {
 		const dataPath = step.datapath;
 		if (dataPath) {
-			const count = await page.evaluate(dataPath => document.querySelectorAll(dataPath).length, dataPath);
-			if (count === 1) {
-				const element = await page.$(dataPath);
-				if (element) {
-					return element;
-				}
+			const element = await this.findElementByCssPath(page, dataPath);
+			if (element != null) {
+				return element;
 			}
 		}
 
 		const xpath = this.transformStepPathToXPath(step.path!);
-		const elements = await page.$x(xpath);
-		if (elements && elements.length === 1) {
-			return elements[0];
+		if (xpath) {
+			const elements = await page.$x(xpath);
+			if (elements && elements.length === 1) {
+				return elements[0];
+			}
 		}
 
 		// fallback to css path
 		const cssPath = step.csspath;
 		if (cssPath) {
-			const count = await page.evaluate(cssPath => document.querySelectorAll(cssPath).length, cssPath);
-			if (count === 1) {
-				const element = await page.$(cssPath);
-				if (element) {
-					return element;
-				}
+			const element = await this.findElementByCssPath(page, cssPath);
+			if (element != null) {
+				return element;
 			}
 		}
 
 		const customPath = step.custompath;
 		if (customPath) {
-			const count = await page.evaluate(customPath => document.querySelectorAll(customPath).length, customPath);
-			if (count === 1) {
-				const element = await page.$(customPath);
-				if (element) {
-					return element;
-				}
+			const element = await this.findElementByCssPath(page, customPath);
+			if (element != null) {
+				return element;
 			}
 		}
 
@@ -1194,9 +1203,33 @@ class Replayer {
 		if (frames.length > 0) {
 			for (let index = 0; index < frames.length; index++) {
 				const frame = frames[index];
-				const element = await frame.$x(xpath);
-				if (element.length === 1) {
-					return element[0];
+				// find by data path
+				if (dataPath) {
+					const elementInFrame = await this.findElementByCssPath(frame, dataPath);
+					if (elementInFrame != null) {
+						return elementInFrame;
+					}
+				}
+				// find by xpath
+				if (xpath) {
+					const elementsInFrame = await frame.$x(xpath);
+					if (elementsInFrame && elementsInFrame.length === 1) {
+						return elementsInFrame[0];
+					}
+				}
+				// find by css path
+				if (cssPath) {
+					const elementInFrame = await this.findElementByCssPath(frame, cssPath);
+					if (elementInFrame != null) {
+						return elementInFrame;
+					}
+				}
+				// find by custom path
+				if (customPath) {
+					const elementInFrame = await this.findElementByCssPath(frame, customPath);
+					if (elementInFrame != null) {
+						return elementInFrame;
+					}
 				}
 			}
 		}
