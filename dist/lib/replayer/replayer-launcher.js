@@ -45,7 +45,8 @@ var replayer_extension_registry_1 = require("./replayer-extension-registry");
 var createNextStepHandler = function (emitter, logger) {
     var waitForNextStep = function (options) {
         var storyName = options.storyName, flowName = options.flowName, replayer = options.replayer;
-        emitter.once("continue-replay-step-" + utils_1.generateKeyByString(storyName, flowName), function (event, arg) { return __awaiter(void 0, void 0, void 0, function () {
+        var eventKey = utils_1.generateKeyByString(storyName, flowName);
+        emitter.once("continue-replay-step-" + eventKey, function (event, arg) { return __awaiter(void 0, void 0, void 0, function () {
             var flow, index, command, step, _a, e_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -62,25 +63,30 @@ var createNextStepHandler = function (emitter, logger) {
                     case 1: return [4 /*yield*/, replayer.end(false)];
                     case 2:
                         _b.sent();
-                        event.reply("replay-browser-disconnect-" + utils_1.generateKeyByString(storyName, flowName), {
+                        // logger.log(`Will send event[replay-browser-disconnect-${eventKey}]`);
+                        event.reply("replay-browser-disconnect-" + eventKey, {
                             summary: replayer.getSummaryData()
                         });
                         return [3 /*break*/, 9];
-                    case 3: return [4 /*yield*/, replayer.end(true)];
+                    case 3: 
+                    // logger.log('Receive message to abolish.');
+                    return [4 /*yield*/, replayer.end(true)];
                     case 4:
+                        // logger.log('Receive message to abolish.');
                         _b.sent();
-                        event.reply("replay-browser-abolish-" + utils_1.generateKeyByString(storyName, flowName), {
+                        // logger.log(`Will send event[replay-browser-abolish-${eventKey}]`);
+                        event.reply("replay-browser-abolish-" + eventKey, {
                             summary: replayer.getSummaryData()
                         });
                         return [3 /*break*/, 9];
                     case 5:
                         // keep replayer instance in replayers map
                         replayer.switchToRecord();
-                        event.reply("replay-browser-ready-to-switch-" + utils_1.generateKeyByString(storyName, flowName), {});
+                        event.reply("replay-browser-ready-to-switch-" + eventKey, {});
                         return [3 /*break*/, 9];
                     case 6:
                         _b.trys.push([6, 8, , 9]);
-                        logger.log("Continue step[" + index + "]@" + utils_1.generateKeyByString(storyName, flowName) + ".");
+                        logger.log("Continue step[" + index + "]@" + eventKey + ".");
                         return [4 /*yield*/, replayer.next(flow, index, storyName)];
                     case 7:
                         _b.sent();
@@ -109,8 +115,9 @@ var createNextStepHandler = function (emitter, logger) {
                 }
             });
         }); });
-        logger.log("Reply message step[" + options.index + "]@[replay-step-end-" + utils_1.generateKeyByString(storyName, flowName) + "].");
-        options.event.reply("replay-step-end-" + utils_1.generateKeyByString(storyName, flowName), {
+        logger.log("Reply message step[" + options.index + "]@[replay-step-end-" + eventKey + "].");
+        // logger.log(`Will send event[replay-step-end-${eventKey}]`);
+        options.event.reply("replay-step-end-" + eventKey, {
             index: options.index,
             error: options.error,
             errorStack: options.errorStack,

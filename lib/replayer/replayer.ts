@@ -1,3 +1,4 @@
+import atob from 'atob';
 import fs from 'fs';
 import {
 	ExtensionBrowserOperationData,
@@ -37,10 +38,7 @@ import path from 'path';
 import puppeteer, { Browser, CoverageEntry, ElementHandle, Frame, Page, Request } from 'puppeteer';
 import util from 'util';
 import uuidv4 from 'uuid/v4';
-import ThirdStepSupport, {
-	ElementAttributeValueRetriever,
-	ElementRetriever
-} from '../3rd-comps/support';
+import ThirdStepSupport, { ElementAttributeValueRetriever, ElementRetriever } from '../3rd-comps/support';
 import Environment from '../config/env';
 import { Summary } from '../types';
 import { generateKeyByString, getTempFolder, inElectron, shorternUrl } from '../utils';
@@ -52,8 +50,8 @@ import { WorkspaceExtensionRegistry } from './replayer-extension-registry';
 import { ReplayerCache } from './replayers-cache';
 import RequestCounter from './request-counter';
 import ssim from './ssim';
-import atob from 'atob';
 
+// noinspection SpellCheckingInspection
 export type ReplayerOptions = {
 	storyName: string;
 	flow: Flow;
@@ -154,8 +152,9 @@ const simplifyFlow = (
 	};
 };
 
+// noinspection SpellCheckingInspection,ES6MissingAwait,JSIgnoredPromiseFromCall,ExceptionCaughtLocallyJS,JSCommentMatchesSignature,JSMethodCanBeStatic
 class Replayer {
-	private storyName: string;
+	private readonly storyName: string;
 	private flow: Flow;
 
 	private device: Device | null = null;
@@ -167,16 +166,16 @@ class Replayer {
 	/** key is uuid, value is request counter */
 	private requests: { [key in string]: RequestCounter } = {};
 
-	private summary: ReplaySummary;
+	private readonly summary: ReplaySummary;
 	private coverages: Array<CoverageEntry> = [];
 
 	/** true when switch to record, never turn back to false again */
 	private onRecord: boolean = false;
-	private logger: Console;
-	private replayers: ReplayerCache;
-	private env: Environment;
+	private readonly logger: Console;
+	private readonly replayers: ReplayerCache;
+	private readonly env: Environment;
 
-	private registry: WorkspaceExtensionRegistry;
+	private readonly registry: WorkspaceExtensionRegistry;
 	private flowInput: WorkspaceExtensions.FlowParameterValues = {};
 	private flowOutput: WorkspaceExtensions.FlowParameterValues = {};
 	private testLogs: Array<{
@@ -553,6 +552,7 @@ class Replayer {
 
 	async start() {
 		// TODO how to use prepared story? currently ignored
+		// noinspection JSUnusedLocalSymbols
 		const preparedStory: WorkspaceExtensions.PreparedStory = await this.getRegistry().prepareStory(
 			this.getStoryName()
 		);
@@ -612,26 +612,51 @@ class Replayer {
 		if (browser == null) {
 			// do nothing, seems not start
 		} else {
-			await this.accomplishFlow();
-			this.getSummary().handleFlowParameters(this.getFlowInput(), this.getFlowOutput());
-			this.getSummary().handleScriptTests(this.getTestLogs());
 			try {
-				const pages = await browser.pages();
-				this.coverages = await ci.gatherCoverage(pages);
-				browser.disconnect();
+				// this.getLogger().log('Start to accomplish flow.')
+				await this.accomplishFlow();
+				// this.getLogger().log('Accomplish flow successfully.')
+				this.getSummary().handleFlowParameters(this.getFlowInput(), this.getFlowOutput());
+				this.getSummary().handleScriptTests(this.getTestLogs());
+				// this.getLogger().log('Process summary successfully.')
 			} catch (e) {
-				this.getLogger().error('Failed to disconnect from brwoser.');
+				this.getLogger().error('Failed to accomplish flow.');
 				this.getLogger().error(e);
 			}
-			if (close) {
-				try {
-					await browser.close();
-					delete this.replayers[this.getIdentity()];
-				} catch (e) {
-					this.getLogger().error('Failed to close browser.');
-					this.getLogger().error(e);
-				}
-			}
+			await new Promise(resolve => {
+				let resolved = false;
+				const resolveMe = () => {
+					if (!resolved) {
+						resolved = true;
+						resolve();
+					}
+				};
+				(async () => {
+					try {
+						const pages = await browser.pages();
+						this.coverages = await ci.gatherCoverage(pages);
+						browser.disconnect();
+					} catch (e) {
+						this.getLogger().error('Failed to disconnect from brwoser.');
+						this.getLogger().error(e);
+					}
+					if (close) {
+						try {
+							await browser.close();
+							delete this.replayers[this.getIdentity()];
+						} catch (e) {
+							this.getLogger().error('Failed to close browser.');
+							this.getLogger().error(e);
+						}
+					}
+				})().then(resolveMe).catch((e) => {
+					this.getLogger().error('Failed to gather coverages, and disconnect/close browser', e);
+					resolveMe();
+				});
+				setTimeout(() => {
+					this.getLogger().error('Failed to gather coverages, and disconnect/close browser, timeout after 30 seconds.');
+				}, 30000);
+			});
 		}
 		this.registry
 			.off(ExtensionEventTypes.LOG, this.handleExtensionLog)
@@ -755,27 +780,43 @@ class Replayer {
 				}
 			}
 		} catch (e) {
-			// console.error(e);
-			await this.handleStepError(step, e);
+			// console.log('error caught');
+			try {
+				await this.handleStepError(step, e);
+			} catch (e2) {
+				// console.error(e2);
+			}
+			// console.log('pass handle step error');
 
 			// send step-on-error to extension
-			const stepOnError = await this.getRegistry().stepOnError(
-				this.getStoryName(),
-				simplifyFlow(this.getFlow(), this.getFlowInput()),
-				step,
-				e
-			);
-			if (!stepOnError._.fixed) {
+			let stepOnError: WorkspaceExtensions.FixedStep | null = null;
+
+			try {
+				stepOnError = await this.getRegistry().stepOnError(
+					this.getStoryName(),
+					simplifyFlow(this.getFlow(), this.getFlowInput()),
+					step,
+					e
+				);
+			} catch (e3) {
+				// console.error(e3);
+			}
+			// console.log('pass register step error');
+
+
+			if (!stepOnError?._?.fixed || true) {
+				// console.log('will throw original error');
 				// extension says not fixed, throw error
 				throw e;
 			} else {
+				// console.log('original error ignored');
 				// extension says fixed, ignore error and continue replay
 				return;
 			}
 		}
 
 		// send step-accomplished to extension
-		// accomplished only triggerred when step has not error on replaying
+		// accomplished only triggered when step has not error on replaying
 		try {
 			const accomplishedStep = await this.getRegistry().stepAccomplished(
 				this.getStoryName(),
@@ -784,11 +825,14 @@ class Replayer {
 			);
 			if (!accomplishedStep._.passed) {
 				// extension says failed
-				throw accomplishedStep._.error ||
-				new Error(`Fail on step cause by step accomplished extension.`);
+				throw (accomplishedStep._.error || new Error(`Fail on step cause by step accomplished extension.`));
 			}
 		} catch (e) {
-			await this.handleStepError(step, e);
+			try {
+				await this.handleStepError(step, e);
+			} catch (e4) {
+				// console.error(e4);
+			}
 			throw e;
 		}
 	}
@@ -798,9 +842,28 @@ class Replayer {
 		this.getSummary().handleError(step, e);
 		const errorFile = `${getTempFolder(process.cwd())}/error-${step.stepUuid}.png`;
 		if (page) {
-			await page.screenshot({ path: errorFile, type: 'png' });
+			return new Promise((resolve) => {
+				let resolved = false;
+				const resolveMe = () => {
+					// make sure resolve exactly only once
+					if (!resolved) {
+						resolved = true;
+						resolve();
+					}
+				};
+				page.screenshot({ path: errorFile, type: 'png' })
+					.then(resolveMe)
+					.catch((e) => {
+						this.getLogger().error(`Failed to capture screenshot on page[${page.url()}].`, e);
+						resolveMe();
+					});
+				setTimeout(() => {
+					this.getLogger().warn(`Failed to capture screenshot on page[${page.url()}], timeout after 10 seconds.`);
+					resolveMe();
+				}, 10000);
+			});
 		} else {
-			this.getLogger().log("page don't exsit ");
+			this.getLogger().log('page doesn\'t exist.');
 		}
 	}
 
@@ -1367,7 +1430,7 @@ class Replayer {
 	}
 
 	private transformStepPathToXPath(stepPath: string): string {
-		return stepPath.replace(/"/g, "'");
+		return stepPath.replace(/"/g, '\'');
 	}
 }
 

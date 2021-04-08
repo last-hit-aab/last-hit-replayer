@@ -152,7 +152,7 @@ var RequestCounter = /** @class */ (function () {
                                     return true;
                                 }
                             })
-                                .map(function (request) { return request.url; })
+                                .map(function (request) { return request.url(); })
                                 .join(', ');
                             msg = "Wait for all requests done, " + this.requests.length + " sent and " + this.offsets.length + " received, timeout after " + usedTime + "ms. Mismatched urls[" + unmatchedUrls + "]";
                             this.clear();

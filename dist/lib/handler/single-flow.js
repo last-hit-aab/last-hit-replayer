@@ -203,14 +203,14 @@ var replayNextStep = function (emitter, story, flow, index, resolve) {
 };
 var handleReplayStepEnd = function (emitter, story, flow, resolve) {
     var key = utils_1.generateKeyByObject(story, flow);
+    // console.log(`Try to handle event[replay-step-end-${key}] once.`);
     emitter.once("replay-step-end-" + key, function (event, arg) {
         // index: index of the finished step, starts from 0
         var error = arg.error, index = arg.index;
         if (error) {
             (function () { return __awaiter(void 0, void 0, void 0, function () {
                 return __generator(this, function (_a) {
-                    console.error(("Process[" + processId + "] Replay flow " + key + " failed on step " + (index + 1) + ".")
-                        .bold.red.bold, error);
+                    console.error(("Process[" + processId + "] replay flow " + key + " failed on step " + (index + 1) + ".").bold.red.bold, error);
                     emitter.once("replay-browser-abolish-" + key, function () { return resolve(); });
                     // abolish anyway
                     emitter.send("continue-replay-step-" + key, { command: 'abolish' });
@@ -222,7 +222,7 @@ var handleReplayStepEnd = function (emitter, story, flow, resolve) {
             // the end or last step is finished
             (function () { return __awaiter(void 0, void 0, void 0, function () {
                 return __generator(this, function (_a) {
-                    console.info(("Process[" + processId + "] Replay flow " + key + " finished.").bold.green);
+                    console.info(("Process[" + processId + "] replay flow " + key + " finished.").bold.green);
                     emitter.once("replay-browser-abolish-" + key, function () { return resolve(); });
                     emitter.send("continue-replay-step-" + key, { command: 'abolish' });
                     return [2 /*return*/];
@@ -249,7 +249,7 @@ exports.handleFlow = function (flowFile, env) {
     };
     var timeLogger = new console.Console({ stdout: timeLoggerStream });
     timeLogger.time(flowKey);
-    console.info(("Process[" + processId + "] Start to replay [" + flowKey + "].").italic.blue.underline);
+    console.info(("Process[" + processId + "] start to replay [" + flowKey + "].").italic.blue.underline);
     var flow;
     try {
         flow = env.readFlowFile(storyName, flowName);
@@ -260,7 +260,7 @@ exports.handleFlow = function (flowFile, env) {
     }
     flow.name = flowName;
     if (flow.steps == null || flow.steps.length === 0) {
-        console.info(("Process[" + processId + "] Flow " + flowKey + " has no steps, ignored.").red.bold);
+        console.info(("Process[" + processId + "] flow " + flowKey + " has no steps, ignored.").red.bold);
         return Promise.reject();
     }
     if (flow.settings && flow.settings.forceDepends) {

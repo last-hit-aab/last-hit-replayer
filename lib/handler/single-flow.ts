@@ -120,7 +120,7 @@ const doForceLoopCheck = (
  * only check loop. return true even dependency flow not found.
  */
 const forceLoopCheck = (dependency: FlowFile, myself: FlowFile, env: Environment): boolean => {
-	return doForceLoopCheck(dependency, [myself], env);
+	return doForceLoopCheck(dependency, [ myself ], env);
 };
 
 type DataLoopCheckNode = {
@@ -142,7 +142,7 @@ const dataLoopCheck = (
 			);
 		}
 
-		const chain: Array<DataLoopCheckNode> = [node];
+		const chain: Array<DataLoopCheckNode> = [ node ];
 		let parent = node.parent;
 		while (parent != null) {
 			chain.push(parent);
@@ -191,6 +191,7 @@ const handleReplayStepEnd = (
 	resolve: () => void
 ): void => {
 	const key = generateKeyByObject(story, flow);
+	// console.log(`Try to handle event[replay-step-end-${key}] once.`);
 	emitter.once(
 		`replay-step-end-${key}`,
 		(event: CallbackEvent, arg: { error?: any; index: number }): void => {
@@ -198,11 +199,7 @@ const handleReplayStepEnd = (
 			const { error, index } = arg;
 			if (error) {
 				(async () => {
-					console.error(
-						(`Process[${processId}] Replay flow ${key} failed on step ${index + 1}.`
-							.bold as any).red.bold,
-						error
-					);
+					console.error((`Process[${processId}] replay flow ${key} failed on step ${index + 1}.`.bold as any).red.bold, error);
 					emitter.once(`replay-browser-abolish-${key}`, () => resolve());
 					// abolish anyway
 					emitter.send(`continue-replay-step-${key}`, { command: 'abolish' });
@@ -210,9 +207,7 @@ const handleReplayStepEnd = (
 			} else if (flow.steps![index].type === 'end' || index >= flow.steps!.length - 1) {
 				// the end or last step is finished
 				(async () => {
-					console.info(
-						(`Process[${processId}] Replay flow ${key} finished.`.bold as any).green
-					);
+					console.info((`Process[${processId}] replay flow ${key} finished.`.bold as any).green);
 					emitter.once(`replay-browser-abolish-${key}`, () => resolve());
 					emitter.send(`continue-replay-step-${key}`, { command: 'abolish' });
 				})();
@@ -232,7 +227,7 @@ export const handleFlow = (flowFile: FlowFile, env: Environment): Promise<FlowRe
 
 	const timeLoggerStream = new stream.Transform();
 	let timeSpent;
-	timeLoggerStream._transform = function(chunk, encoding, done) {
+	timeLoggerStream._transform = function (chunk, encoding, done) {
 		this.push(chunk);
 		timeSpent = typeof chunk === 'string' ? chunk : chunk.toString();
 		done();
@@ -240,9 +235,7 @@ export const handleFlow = (flowFile: FlowFile, env: Environment): Promise<FlowRe
 	const timeLogger = new console.Console({ stdout: timeLoggerStream });
 	timeLogger.time(flowKey);
 
-	console.info(
-		(`Process[${processId}] Start to replay [${flowKey}].` as any).italic.blue.underline
-	);
+	console.info((`Process[${processId}] start to replay [${flowKey}].` as any).italic.blue.underline);
 	let flow: Flow;
 	try {
 		flow = env.readFlowFile(storyName, flowName);
@@ -253,9 +246,7 @@ export const handleFlow = (flowFile: FlowFile, env: Environment): Promise<FlowRe
 	flow.name = flowName;
 
 	if (flow.steps == null || flow.steps.length === 0) {
-		console.info(
-			(`Process[${processId}] Flow ${flowKey} has no steps, ignored.` as any).red.bold
-		);
+		console.info((`Process[${processId}] flow ${flowKey} has no steps, ignored.` as any).red.bold);
 		return Promise.reject();
 	}
 
@@ -344,13 +335,13 @@ export const handleFlow = (flowFile: FlowFile, env: Environment): Promise<FlowRe
 						} else {
 							params
 								.filter((param: FlowParameter) => {
-									return ['out', 'both'].includes(param.type);
+									return [ 'out', 'both' ].includes(param.type);
 								})
 								.forEach((param: FlowParameter) => {
 									flow.params = flow.params || [];
 									const defined = flow.params.find(
 										defined =>
-											['in', 'both'].includes(defined.type) &&
+											[ 'in', 'both' ].includes(defined.type) &&
 											defined.name === param.name
 									);
 									if (defined) {

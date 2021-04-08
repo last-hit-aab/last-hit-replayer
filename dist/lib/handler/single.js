@@ -123,7 +123,9 @@ exports.doOnSingleProcess = function (flows, env) { return __awaiter(void 0, voi
                                                 }
                                                 else {
                                                     reports.push(report);
-                                                    allCoverages.push.apply(allCoverages, coverages);
+                                                    if (coverages && Array.isArray(coverages)) {
+                                                        allCoverages.push.apply(allCoverages, coverages);
+                                                    }
                                                 }
                                                 return [3 /*break*/, 5];
                                             case 4:

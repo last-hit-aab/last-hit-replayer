@@ -124,7 +124,7 @@ class RequestCounter {
 						return true;
 					}
 				})
-				.map(request => request.url)
+				.map(request => request.url())
 				.join(', ');
 			const msg = `Wait for all requests done, ${this.requests.length} sent and ${this.offsets.length} received, timeout after ${usedTime}ms. Mismatched urls[${unmatchedUrls}]`;
 			this.clear();

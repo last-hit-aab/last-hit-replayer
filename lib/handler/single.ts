@@ -66,7 +66,9 @@ export const doOnSingleProcess = async (flows: FlowFile[], env: Environment): Pr
 						pendingFlows.push(flow);
 					} else {
 						reports.push(report);
-						allCoverages.push(...coverages);
+						if (coverages && Array.isArray(coverages)) {
+							allCoverages.push(...coverages);
+						}
 					}
 				} catch (e) {
 					logger.error(e);

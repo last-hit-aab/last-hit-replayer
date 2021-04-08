@@ -22,8 +22,9 @@ type NextStepHandler = (options: NextStepHandlerOptions) => void;
 const createNextStepHandler = (emitter: ReplayEmitter, logger: Console): NextStepHandler => {
 	const waitForNextStep = (options: NextStepHandlerOptions): void => {
 		const { storyName, flowName, replayer } = options;
+		const eventKey = generateKeyByString(storyName, flowName);
 		emitter.once(
-			`continue-replay-step-${generateKeyByString(storyName, flowName)}`,
+			`continue-replay-step-${eventKey}`,
 			async (
 				event: CallbackEvent,
 				arg: {
@@ -37,17 +38,20 @@ const createNextStepHandler = (emitter: ReplayEmitter, logger: Console): NextSte
 				switch (command) {
 					case 'disconnect':
 						await replayer.end(false);
+						// logger.log(`Will send event[replay-browser-disconnect-${eventKey}]`);
 						event.reply(
-							`replay-browser-disconnect-${generateKeyByString(storyName, flowName)}`,
+							`replay-browser-disconnect-${eventKey}`,
 							{
 								summary: replayer.getSummaryData()
 							}
 						);
 						break;
 					case 'abolish':
+						// logger.log('Receive message to abolish.');
 						await replayer.end(true);
+						// logger.log(`Will send event[replay-browser-abolish-${eventKey}]`);
 						event.reply(
-							`replay-browser-abolish-${generateKeyByString(storyName, flowName)}`,
+							`replay-browser-abolish-${eventKey}`,
 							{
 								summary: replayer.getSummaryData()
 							}
@@ -56,22 +60,11 @@ const createNextStepHandler = (emitter: ReplayEmitter, logger: Console): NextSte
 					case 'switch-to-record':
 						// keep replayer instance in replayers map
 						replayer.switchToRecord();
-						event.reply(
-							`replay-browser-ready-to-switch-${generateKeyByString(
-								storyName,
-								flowName
-							)}`,
-							{}
-						);
+						event.reply(`replay-browser-ready-to-switch-${eventKey}`, {});
 						break;
 					default:
 						try {
-							logger.log(
-								`Continue step[${index}]@${generateKeyByString(
-									storyName,
-									flowName
-								)}.`
-							);
+							logger.log(`Continue step[${index}]@${eventKey}.`);
 							await replayer.next(flow, index, storyName);
 							replayer.getSummary().handle(step);
 
@@ -96,14 +89,10 @@ const createNextStepHandler = (emitter: ReplayEmitter, logger: Console): NextSte
 				}
 			}
 		);
-		logger.log(
-			`Reply message step[${options.index}]@[replay-step-end-${generateKeyByString(
-				storyName,
-				flowName
-			)}].`
-		);
+		logger.log(`Reply message step[${options.index}]@[replay-step-end-${eventKey}].`);
 
-		options.event.reply(`replay-step-end-${generateKeyByString(storyName, flowName)}`, {
+		// logger.log(`Will send event[replay-step-end-${eventKey}]`);
+		options.event.reply(`replay-step-end-${eventKey}`, {
 			index: options.index,
 			error: options.error,
 			errorStack: options.errorStack,
