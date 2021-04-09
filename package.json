@@ -57,7 +57,7 @@
 		"puppeteer-to-istanbul": "^1.2.2",
 		"typescript": "^3.7.2",
 		"uuid": "^3.3.3",
-		"yargs": "^14.0.0"
+		"yargs": "^14.2.3"
 	},
 	"devDependencies": {
 		"gulp": "^4.0.2",
